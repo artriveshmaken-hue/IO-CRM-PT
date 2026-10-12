@@ -322,6 +322,29 @@ const acct = id => accounts.find(a => a.id === id);
 const dachLead = accounts.find(a => a.market === 'DE');
 dachLead.stage = 'Active'; dachLead.last = 128; dachLead.tier = 'Gold';
 
+/* ---------- guest performance joined to partner records (JMP Tracker / partner monthly reports, via FR-D1) ---------- */
+const SEASON = [1.1, 1.1, 1, .9, .7, .6, .7, .8, .9, 1.1, 1.2, 1.3];
+const LAST_M = 8; // actuals reported to September
+partners().forEach(p => {
+  if (!(p.stage === 'Active' || p.stage === 'SI Agreement')) return;
+  const gp = p.market === 'GP', t1 = MKT[p.market].tier === 1;
+  const target = gp ? rint(30, 60) * 1000 : t1 ? rint(8, 20) * 1000 : rint(3, 8) * 1000;
+  const st = p.stage === 'SI Agreement' ? 9 : 0;
+  const w = SEASON.map((x, m) => m >= st ? x : 0), ws = sum(w);
+  p.tgt = w.map(x => Math.round(target * x / ws));
+  const pf = p.last >= RISK_DAYS ? .5 + rnd() * .3 : p.last > 45 ? .72 + rnd() * .25 : .85 + rnd() * .4;
+  p.act = p.tgt.map((t, m) => m <= LAST_M && m >= st ? Math.round(t * pf * (.88 + rnd() * .24)) : null);
+  p.cpa = gp ? rint(40, 90) : rint(70, 190); p.alos = +(2.3 + rnd() * 1.8).toFixed(1);
+});
+const ytd = p => p.act ? { a: sum(p.act), t: sum(p.tgt.slice(0, LAST_M + 1)) } : null;
+function perf(list) {
+  const ps = list.filter(p => p.act && ytd(p).t > 0);
+  const act = sum(ps.map(p => ytd(p).a)), tgt = sum(ps.map(p => ytd(p).t));
+  const spend = sum(ps.map(p => Math.min(ytd(p).a, ytd(p).t) * p.cpa)), nights = sum(ps.map(p => ytd(p).a * p.alos));
+  const months = [...Array(LAST_M + 1).keys()].map(m => ({ m, a: sum(ps.map(p => p.act[m] || 0)), t: sum(ps.map(p => p.tgt[m])) }));
+  return { act, tgt, ach: tgt ? act / tgt : null, cpa: act ? spend / act : 0, alos: act ? nights / act : 0, months, n: ps.length };
+}
+
 /* ---------- FR-A3 engagement cadence rules and the tasks they create ---------- */
 const CADENCE = [
   { id: 'R1', when: 'New lead (Prospect)', rule: 'Intro call within 2 days of capture', days: 2, stage: 'Prospect' },
@@ -385,11 +408,11 @@ liveEvent.invitees.slice(0, 4).forEach(x => x.status = 'Confirmed');
 
 /* ---------- FR-B1–B3 campaigns ---------- */
 const newsletters = [
-  { d: new Date(2026, 9, 3), name: 'Europe trade update: winter season', seg: 'Europe · all tiers', sent: 412, open: .46, click: .09, unsub: 2, bounce: 6 },
-  { d: new Date(2026, 8, 18), name: 'Luxury FAM trip applications', seg: 'Luxury agencies · DACH, FR, IT', sent: 128, open: .58, click: .17, unsub: 0, bounce: 1 },
+  { d: new Date(2026, 9, 3), name: 'Europe trade update: winter season', seg: 'Europe · all tiers', sec: 'Europe', sent: 412, open: .46, click: .09, unsub: 2, bounce: 6 },
+  { d: new Date(2026, 8, 18), name: 'Luxury FAM trip applications', seg: 'Luxury agencies · DACH, FR, IT', sec: 'Europe', sent: 128, open: .58, click: .17, unsub: 0, bounce: 1 },
   { d: new Date(2026, 8, 4), name: 'Family summer recap and Q4 offers', seg: 'Family segment · all markets', sent: 690, open: .39, click: .07, unsub: 5, bounce: 14 },
-  { d: new Date(2026, 7, 14), name: 'GCC trade newsletter', seg: 'GCC · all tiers', sent: 233, open: .51, click: .11, unsub: 1, bounce: 3 },
-  { d: new Date(2026, 6, 10), name: 'APAC partner digest', seg: 'APAC · Gold and Silver', sent: 305, open: .42, click: .08, unsub: 3, bounce: 9 },
+  { d: new Date(2026, 7, 14), name: 'GCC trade newsletter', seg: 'GCC · all tiers', sec: 'Proximity Markets', sent: 233, open: .51, click: .11, unsub: 1, bounce: 3 },
+  { d: new Date(2026, 6, 10), name: 'APAC partner digest', seg: 'APAC · Gold and Silver', sec: 'APAC', sent: 305, open: .42, click: .08, unsub: 3, bounce: 9 },
 ];
 const comarketing = partners().filter(p => p.stage === 'Active').slice(0, 10).map((p, i) => ({ aid: p.id, name: pick(['Winter in Abu Dhabi', 'Culture weekends', 'Family breaks', 'Stopover offers', 'Luxury escapes']), channel: pick(['Partner newsletter', 'Paid social', 'OTA banner', 'Partner website', 'In-store']), reach: rint(20, 260) * 1000, clicks: 0, leads: 0, cost: rint(4, 30) * 1e4 }));
 comarketing.forEach(c => { c.clicks = Math.round(c.reach * (.006 + rnd() * .014)); c.leads = Math.round(c.clicks * (.01 + rnd() * .03)); });
@@ -406,8 +429,8 @@ const ROLES = {
 const S = {
   signedIn: false, role: 'sec', lang: 'en', screen: 'home', tab: {}, drawer: null, menu: null, q: '', toast: null, spot: null,
   step: 0, tourOpen: true, dupes: true, lead: null, meet: null, online: true, logForm: false, ev: 'E1',
-  seg: { cc: ['DE', 'AT', 'CH'], type: [], tier: ['Gold', 'Silver'] }, segSaved: false, pf: { section: 'All', segment: 'All' }, ef: { type: 'All', section: 'All' }, pack: false,
-  done: { a1: false, a2lead: false, a2stage: false, a3: false, c2inv: false, c2meet: false, c4: false, b: false, a4: false, d: false },
+  seg: { cc: ['DE', 'AT', 'CH'], type: [], tier: ['Gold', 'Silver'] }, segSaved: false, pf: { section: 'All', segment: 'All' }, ef: { type: 'All', section: 'All' }, pack: false, sel: null,
+  done: { m360: false, a1: false, a2lead: false, a2stage: false, a3: false, c2inv: false, c2meet: false, c4: false, b: false, a4: false, d: false },
 };
 const R = () => ROLES[S.role];
 function inScope(mk) {
@@ -449,6 +472,7 @@ const ICONS = {
   campaigns: '<path d="M4 10v4l11 5V5L4 10z"/><path d="M15 9.5a3 3 0 0 1 0 5M7 14l1.5 5"/>',
   dash: '<rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/>',
   brd: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 12l2 2 4-4"/>',
+  map: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.5 5.4 3.5 8.5s-1 5.9-3.5 8.5c-2.5-2.6-3.5-5.4-3.5-8.5s1-5.9 3.5-8.5z"/>',
   bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
 };
 const icon = k => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]}</svg>`;
@@ -491,10 +515,10 @@ function screenHome() {
   const risky = mp.filter(atRisk).sort((a, b) => b.last - a.last);
   const evs = myEvents().filter(e => e.status !== 'Completed').sort((a, b) => a.date - b.date);
   if (S.role === 'mkt') return screenCampaigns();
-  if (S.role === 'lead') return screenDash(true);
+  if (S.role === 'lead') return screenM360();
   const taskRow = x => { const a = acct(x.aid); return `<div class="item"><button class="btn sm" data-act="task-done" data-id="${x.id}" aria-label="Mark done">✓</button><div class="body"><div class="title">${esc(x.title)}</div><div class="small muted">${esc(a.name)} · created by rule ${x.rule}${x.escalated ? ' · <b class="risk-t">escalated to Section Head</b>' : ''}</div></div><span class="small ${overdueDays(x) > 0 ? 'risk-t' : 'muted'}">${dueTxt(x)}</span></div>`; };
   return `<div class="head"><div class="grow"><div class="muted">${fDate(TODAY)} · ${r.title}</div><h1>${t('Good morning')}, ${S.role === 'sec' ? 'Layla' : 'team'}</h1></div>
-      <button class="btn primary" data-act="lead-open">+ Capture lead</button></div>
+      <div class="row"><button class="btn" data-act="go" data-v="m360">${esc(selName(selDefault()))} at a glance →</button><button class="btn primary" data-act="lead-open">+ Capture lead</button></div></div>
     <div class="kpis">${kpi('Open leads', leads.length, 'Prospect and Qualified')}${kpi('Overdue follow-ups', od.length, 'Created by cadence rules', od.length ? 'risk' : '')}${kpi('At-risk partners', risky.length, 'Active, 90+ days no contact', risky.length ? 'risk' : '')}${kpi('Upcoming events', evs.length, evs[0] ? evs[0].name : '')}</div>
     <div class="grid2"><div class="stack">
       <section class="card" ${spot('overdue')}><div class="pad row between" style="padding-bottom:6px"><h2 style="color:var(--risk)">${t('Overdue')} · ${od.length}</h2><button class="link small" data-act="go" data-v="followups">All follow-ups →</button></div><div class="list">${od.slice(0, 6).map(taskRow).join('') || '<div class="empty">Nothing overdue.</div>'}</div></section>
@@ -506,6 +530,108 @@ function screenHome() {
       <section class="card pad" style="display:grid;gap:8px"><div class="row between"><h2>My open leads</h2><button class="link small" data-act="go" data-v="pipeline">Pipeline →</button></div>
         ${leads.slice(0, 5).map(p => `<button class="row between" style="border:0;background:none;padding:2px 0;text-align:start" data-act="partner" data-id="${p.id}"><span>${esc(p.name)} <span class="cc">${p.market}</span></span><span class="chip">${t(p.stage)}</span></button>`).join('') || '<div class="small muted">No open leads.</div>'}</section>
     </div></div>`;
+}
+
+/* =====================================================================
+   Market 360: one consolidated picture of a section or country
+   ===================================================================== */
+function m360Options() {
+  const o = [], sc = R().scope;
+  if (sc === 'all') o.push(['all', 'All IO']);
+  SECTIONS.forEach(x => { if (sc === 'all' || sc.section === x) o.push(['s:' + x, x + ' section']); });
+  MK.forEach(m => { if (m[0] !== 'GP' && inScope(m[0])) o.push(['c:' + m[0], m[1]]); });
+  return o;
+}
+function selDefault() { return R().scope === 'all' ? 'all' : R().scope.section ? 's:' + R().scope.section : 'c:DE'; }
+function selList(sel) { return sel === 'all' ? partners() : sel.startsWith('s:') ? partners().filter(p => MKT[p.market].section === sel.slice(2)) : partners().filter(p => p.market === sel.slice(2)); }
+function selName(sel) { return sel === 'all' ? 'All IO' : sel.startsWith('s:') ? sel.slice(2) + ' section' : MKT[sel.slice(2)].name; }
+function children(sel) {
+  if (sel === 'all') return SECTIONS.map(x => ['s:' + x, x]);
+  if (sel.startsWith('s:')) return MK.filter(m => m[2] === sel.slice(2) && m[0] !== 'GP' && inScope(m[0])).map(m => ['c:' + m[0], m[1]]);
+  return [];
+}
+const achCls = a => a == null ? '' : a >= 1 ? 'ok' : a >= .8 ? 'info' : a >= .6 ? 'warn' : 'risk';
+const achLbl = a => a == null ? 'No target' : a >= 1 ? 'On or above target' : a >= .8 ? 'Slightly behind' : a >= .6 ? 'Behind' : 'Well behind';
+function insights(list) {
+  const out = [];
+  list.filter(p => p.act && ytd(p).t > 0).forEach(p => {
+    const y = ytd(p), a = y.a / y.t;
+    if (a < .8 && p.last >= 30) out.push({ lvl: 'risk', w: (1 - a) * y.t + p.last * 20, html: `<b>${esc(p.name)}</b> is at ${pct(a)} of target and was last contacted ${p.last} days ago.`, act: p.insight ? '' : 'insight-task', id: p.id, btn: p.insight ? 'Follow-up created ✓' : 'Create follow-up' });
+    else if (a >= 1.1) out.push({ lvl: 'ok', w: y.a * .05, html: `<b>${esc(p.name)}</b> is ahead of target (${pct(a)}). Candidate for a larger programme next year.`, act: 'partner', id: p.id, btn: 'Open partner' });
+  });
+  const si = list.filter(p => p.stage === 'SI Agreement');
+  if (si.length) out.push({ lvl: 'info', w: 3000, html: `${si.length} SI agreement(s) in signature would add about ${fK(sum(si.map(p => sum(p.tgt))))} guests from November.`, act: 'go', v: 'pipeline', btn: 'Pipeline' });
+  events.filter(e => e.status !== 'Completed' && list.some(p => p.market === e.market)).forEach(e => out.push({ lvl: 'info', w: 2800, html: `<b>${esc(e.name)}</b> ${e.status === 'Live' ? 'is running today' : 'on ' + fShort(e.date)}: ${e.invitees.filter(x => x.status === 'Confirmed').length} of ${e.invitees.length} invited partners confirmed.`, act: 'event', id: e.id, btn: 'Open event' }));
+  const od = tasks.filter(x => !x.done && overdueDays(x) > 0 && list.some(p => p.id === x.aid));
+  if (od.length) out.push({ lvl: 'warn', w: 3500, html: `${od.length} follow-up(s) overdue, ${od.filter(x => x.escalated).length} escalated to the Section Head.`, act: 'go', v: 'followups', btn: 'Follow-ups' });
+  return out.sort((a, b) => b.w - a.w).slice(0, 6);
+}
+function monthChart(months) {
+  const max = Math.max(1, ...months.map(r => Math.max(r.a, r.t))) * 1.12;
+  const W = 520, H = 250, L = 44, B = 24, T = 10, gw = (W - L - 8) / months.length, bw = gw * .55;
+  const y = v => T + (H - T - B) * (1 - v / max);
+  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Guests by month against target">`;
+  [0, .25, .5, .75, 1].forEach(f => { const v = max * f / 1.12; s += `<line class="grid" x1="${L}" x2="${W - 6}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${fK(v)}</text>`; });
+  months.forEach((r, i) => {
+    const x = L + i * gw + (gw - bw) / 2;
+    if (r.a > 0) s += `<path d="M${x},${y(0)} V${y(r.a) + 4} q0,-4 4,-4 h${bw - 8} q4,0 4,4 V${y(0)} z" fill="${r.a >= r.t ? 'var(--c1)' : 'var(--c3)'}"/>`;
+    s += `<text x="${x + bw / 2}" y="${H - 7}" text-anchor="middle">${MONTHS[r.m]}</text>`;
+  });
+  s += `<polyline points="${months.map((r, i) => `${L + i * gw + gw / 2},${y(r.t)}`).join(' ')}" fill="none" stroke="var(--ink)" stroke-width="2" stroke-dasharray="5 4"/>`;
+  months.forEach((r, i) => { s += `<circle cx="${L + i * gw + gw / 2}" cy="${y(r.t)}" r="4" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"/>`; });
+  months.forEach((r, i) => { s += `<rect x="${L + i * gw}" y="${T}" width="${gw}" height="${H - T - B}" fill="transparent" data-tip="${esc(`<b>${MONTHS[r.m]} 2026</b><br>Guests: ${fN(r.a)}<br>Target: ${fN(r.t)}<br>${pct(r.a / r.t)} of target`)}"/>`; });
+  return s + '</svg>';
+}
+function screenM360() {
+  const opts = m360Options();
+  if (!S.sel || !opts.some(o => o[0] === S.sel)) S.sel = selDefault();
+  const sel = S.sel, list = selList(sel), P = perf(list), kids = children(sel);
+  const markets = [...new Set(list.map(p => p.market))];
+  const act = list.filter(p => p.stage === 'Active'), risky = list.filter(atRisk);
+  const evs = events.filter(e => markets.includes(e.market));
+  const secName = sel === 'all' ? null : sel.startsWith('s:') ? sel.slice(2) : MKT[sel.slice(2)].section;
+  const news = newsletters.filter(n => !secName || n.sec === secName || !n.sec);
+  const co = comarketing.filter(c => list.some(p => p.id === c.aid));
+  const contacted30 = act.filter(p => p.last <= 30).length;
+  const acts90 = list.flatMap(p => p.activities.filter(a => TODAY - a.d <= 90 * DAY));
+  const bySec = SECTIONS.map(x => [x, acts90.filter(a => a.sec === x).length]).filter(x => x[1]);
+  const top = list.filter(p => p.act && ytd(p).t > 0).sort((a, b) => ytd(b).a - ytd(a).a);
+  const crumbs = sel === 'all' ? [] : sel.startsWith('c:') && R().scope === 'all' ? [['all', 'All IO'], ['s:' + MKT[sel.slice(2)].section, MKT[sel.slice(2)].section]] : sel.startsWith('c:') && R().scope.section ? [['s:' + R().scope.section, R().scope.section]] : sel.startsWith('s:') && R().scope === 'all' ? [['all', 'All IO']] : [];
+  return `<div class="head"><div class="grow">${crumbs.length ? `<div class="small">${crumbs.map(([k, l]) => `<button class="link small" data-act="sel" data-v="${k}">${esc(l)}</button>`).join(' › ')} ›</div>` : '<span class="eyebrow">Market 360</span>'}<h1>${esc(selName(sel))}</h1>
+      <div class="muted">Performance and relationships in one picture · guest actuals to ${MONTHS[LAST_M]} 2026 · CRM data live</div></div>
+      <label class="row small" style="gap:6px" ${spot('m360sel')}>View<select class="inline" id="m360-sel" style="padding:6px 8px">${opts.map(([k, l]) => `<option value="${k}" ${k === sel ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label></div>
+    <div class="kpis">
+      ${kpi('Overnight guests YTD', fK(P.act), `<span class="chip ${achCls(P.ach)}">${pct(P.ach)} of ${fK(P.tgt)} target</span>`)}
+      ${kpi('Average CPA', 'AED ' + Math.round(P.cpa), 'Paid guests only')}
+      ${kpi('ALOS', P.alos.toFixed(1) + ' nights', '')}
+      ${kpi('Active partners', act.length, `${contacted30} contacted in the last 30 days`)}
+      ${kpi('In pipeline', list.length - act.length, `${list.filter(p => p.stage === 'SI Agreement').length} SI agreements in signature`)}
+      ${kpi('At-risk partners', risky.length, 'Active, 90+ days no contact', risky.length ? 'risk' : '')}
+    </div>
+    <div class="grid2">
+      <section class="card pad" style="display:grid;gap:10px"><div class="row between wrap"><h2>Guests by month vs target</h2>${legend([{ n: 'At or above target', c: 'var(--c1)' }, { n: 'Below target', c: 'var(--c3)' }])}<span class="legend"><span><i style="background:none;border-top:2px dashed var(--ink);height:0;border-radius:0;width:14px"></i>Target</span></span></div>${monthChart(P.months)}</section>
+      <section class="card" ${spot('insights')}><div class="pad" style="padding-bottom:6px"><h2>What needs attention</h2><div class="small muted">Found by joining performance with contact, pipeline and event data</div></div>
+        <div class="list">${insights(list).map(i => `<div class="item" style="display:grid;gap:6px"><div class="small"><span class="chip ${i.lvl}" style="margin-inline-end:6px">${i.lvl === 'risk' ? 'Risk' : i.lvl === 'ok' ? 'Opportunity' : i.lvl === 'warn' ? 'Overdue' : 'Note'}</span>${i.html}</div><div>${i.act ? `<button class="btn sm" data-act="${i.act}" ${i.id ? `data-id="${i.id}"` : ''} ${i.v ? `data-v="${i.v}"` : ''}>${i.btn}</button>` : `<span class="chip ok">${i.btn}</span>`}</div></div>`).join('') || '<div class="empty">Nothing needs attention.</div>'}</div></section>
+    </div>
+    ${kids.length ? `<section class="card pad" style="display:grid;gap:10px" ${spot('tiles')}><div class="row between wrap"><h2>${sel === 'all' ? 'Sections' : 'Countries'} at a glance</h2><span class="small muted">Click to drill down</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">${kids.map(([k, l]) => { const ls = selList(k), pp = perf(ls); return `<button class="card" style="text-align:start;padding:12px;display:grid;gap:4px;border-color:var(--line);background:var(--surface);box-shadow:inset 0 4px 0 var(--${pp.ach == null ? 'line' : pp.ach >= 1 ? 'ok' : pp.ach >= .8 ? 'info' : pp.ach >= .6 ? 'warn' : 'risk'})" data-act="sel" data-v="${k}"><b>${esc(l)}</b><span class="num" style="font-size:20px;font-weight:600">${fK(pp.act)}</span><span class="small"><span class="chip ${achCls(pp.ach)}">${pct(pp.ach)} · ${achLbl(pp.ach)}</span></span><span class="small muted">${ls.filter(p => p.stage === 'Active').length} active · ${ls.filter(atRisk).length} at risk · ${ls.filter(p => p.stage !== 'Active').length} pipeline</span></button>`; }).join('')}</div></section>` : ''}
+    <section class="card table-wrap"><div class="pad" style="padding-bottom:4px"><h2>Partners: performance and relationship together</h2><div class="small muted">What the YTD dashboard, JMP Tracker, partner files and event trackers each hold today, on one row</div></div><table><thead><tr><th>Partner</th>${sel.startsWith('c:') ? '' : '<th>Market</th>'}<th class="n">Guests YTD</th><th>vs target</th><th class="n">Share</th><th class="n">CPA</th><th>Last contact</th><th class="n">Open follow-ups</th><th class="n">Events 2026</th><th class="n">Co-mkt leads</th></tr></thead>
+      <tbody>${top.slice(0, 12).map(p => { const y = ytd(p), a = y.a / y.t; return `<tr class="click" data-act="partner" data-id="${p.id}"><td style="min-width:190px"><b>${esc(p.name)}</b><div class="small muted">${p.type} · ${p.tier}</div></td>${sel.startsWith('c:') ? '' : `<td><span class="cc">${p.market}</span></td>`}<td class="n">${fN(y.a)}</td><td><span class="chip ${achCls(a)}">${pct(a)}</span></td><td class="n">${pct(y.a / Math.max(P.act, 1))}</td><td class="n">${p.cpa}</td><td>${lastChip(p)}</td><td class="n">${tasks.filter(x => x.aid === p.id && !x.done).length}</td><td class="n">${events.filter(e => e.invitees.some(x => x.aid === p.id && (x.attended || x.status === 'Confirmed'))).length}</td><td class="n">${sum(co.filter(c => c.aid === p.id).map(c => c.leads)) || '-'}</td></tr>`; }).join('') || '<tr><td colspan="10" class="empty">No contracted partners with targets in this view.</td></tr>'}</tbody></table>${top.length > 12 ? `<div class="pad small muted">Showing the top 12 of ${top.length} by guests.</div>` : ''}</section>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px">
+      <section class="card pad" style="display:grid;gap:8px;align-content:start"><div class="row between"><h2>Pipeline</h2><button class="link small" data-act="go" data-v="pipeline">Open →</button></div>
+        ${STAGES.map((st, i) => { const n = list.filter(p => p.stage === st).length; return `<div class="row small"><span style="width:96px">${t(st)}</span><div class="bar" style="flex:1;height:10px"><i style="width:${n / Math.max(1, list.length) * 100}%;background:${STAGE_COL[i]}"></i></div><b class="num" style="width:22px;text-align:end">${n}</b></div>`; }).join('')}
+        <div class="small muted">${list.filter(p => p.stages.some(x => x.s === 'Active' && TODAY - x.at <= 90 * DAY)).length} moved to Active in the last 90 days</div></section>
+      <section class="card pad" style="display:grid;gap:8px;align-content:start"><div class="row between"><h2>Trade promotion</h2><button class="link small" data-act="go" data-v="events">Open →</button></div>
+        ${evs.map(e => { const conf = e.invitees.filter(x => x.status === 'Confirmed').length, att = e.invitees.filter(x => x.attended).length; return `<button class="row between" style="border:0;background:none;padding:2px 0;text-align:start" data-act="event" data-id="${e.id}"><span class="small"><b>${esc(e.name)}</b><div class="muted">${e.status === 'Completed' ? `${pct(att / Math.max(conf, 1))} attendance · ${e.meetings.length} meetings · ${e.meetings.filter(m => m.converted).length} converted` : `${conf}/${e.invitees.length} confirmed · ${e.parts.filter(x => x.status === 'Confirmed').length} stakeholders`}</div></span><span class="chip ${e.status === 'Live' ? 'mark' : e.status === 'Completed' ? 'ok' : 'info'}">${e.status}</span></button>`; }).join('') || '<div class="small muted">No events in this view.</div>'}</section>
+      <section class="card pad" style="display:grid;gap:8px;align-content:start"><div class="row between"><h2>Campaigns</h2><button class="link small" data-act="go" data-v="campaigns">Open →</button></div>
+        ${news.slice(0, 2).map(n => `<div class="small"><b>${esc(n.name)}</b><div class="muted">${fShort(n.d)} · ${n.sent} sent · ${pct(n.open)} opened · ${pct(n.click)} clicked</div></div>`).join('')}
+        <div class="small" style="border-top:1px solid var(--line);padding-top:8px"><b>Co-marketing:</b> ${co.length} campaigns · ${fK(sum(co.map(c => c.reach)))} reach · ${sum(co.map(c => c.leads))} leads${co.length ? ` · ${aed(sum(co.map(c => c.cost)) / Math.max(1, sum(co.map(c => c.leads))))} per lead` : ''}</div></section>
+      <section class="card pad" style="display:grid;gap:8px;align-content:start"><h2>Engagement across IO</h2>
+        <div class="small">${pct(contacted30 / Math.max(1, act.length))} of active partners contacted in the last 30 days</div><div class="meter"><i style="width:${contacted30 / Math.max(1, act.length) * 100}%"></i></div>
+        <div class="small muted" style="margin-top:6px">Contacts in the last 90 days, by the section that made them</div>
+        ${bySec.map(([x, n]) => `<div class="row small"><span style="width:120px">${x}</span><div class="bar" style="flex:1;height:10px"><i style="width:${n / Math.max(...bySec.map(b => b[1])) * 100}%;background:var(--c1)"></i></div><b class="num" style="width:22px;text-align:end">${n}</b></div>`).join('') || '<div class="small muted">None</div>'}</section>
+    </div>
+    <div class="small muted">Sources: partners, pipeline, events, campaigns and activities from the IO CRM. Guest actuals and targets from the JMP Tracker and partner monthly reports, joined on the partner record (unified data model, FR-D1). ${sel === 'all' || sel.startsWith('s:Global') ? '' : 'Multi-market GP partners are counted under Global Partnerships.'}</div>`;
 }
 
 function screenPartners() {
@@ -671,6 +797,7 @@ function packDoc(rows) {
 }
 
 const COVER = [
+  ['FR-D1 · D2', 'Consolidated picture of a section or country', 'Market 360: performance joined with partners, pipeline, events, campaigns and engagement', 'm360'],
   ['FR-A1', 'Trade partner master and stakeholder master data', 'Partners · merge · contacts with role · record history', 'partners'],
   ['FR-A2', 'Partner pipeline and lead management', 'Mobile lead capture · Pipeline board · conversion trend', 'pipeline'],
   ['FR-A3', 'Automated engagement cadence', 'Follow-ups · cadence rules · escalation', 'followups'],
@@ -735,6 +862,7 @@ function meetSheet() {
    ===================================================================== */
 const STEPS = [
   { title: 'Why IO needs one CRM', ref: 'BRD §3 Current state', pain: 'Each market keeps partner data in its own Excel file. Cross-market visibility depends on email and WhatsApp. Events are tracked manually with no record of attendance, meeting outcomes or follow-ups. B2B emails go out from Outlook lists.', gain: 'One Dynamics 365 environment for partners, stakeholders, pipeline, events, campaigns and reporting. This tour walks through the BRD requirements one by one with sample data.', task: 'Press Next to start.' },
+  { key: 'm360', screen: 'm360', target: 'insights', title: 'The whole picture of a market', ref: 'FR-A4 · FR-C4 · FR-D1 · FR-D2', pain: 'To see how a section or country is doing, you combine the YTD dashboard, the JMP Tracker, section partner files, event trackers and email, then work out why the numbers moved.', gain: 'One page per section or country joins guest performance with partner contact, pipeline, events and campaigns, and points to what needs attention.', task: 'Switch the view (for example Europe → Germany), or create a follow-up from an insight.' },
   { key: 'a1', screen: 'partners', target: 'dupes', title: 'One record per partner', ref: 'FR-A1 · NFR 9', pain: 'The same partner sits in three section files under three spellings. Europe thinks it has gone quiet for 128 days.', gain: 'One deduplicated record with type, segment, market, tier, contracted status and POCs with roles, migrated from all section files.', task: 'On Partners, merge the duplicate.' },
   { key: 'a2lead', screen: 'events', target: null, title: 'Capture leads on a phone', ref: 'FR-A2 · NFR 3 · NFR 8', pain: 'Business cards from events end up in a pocket and are typed into Excel days later, if at all.', gain: 'Scan or type a lead on a phone, even offline. It is checked for duplicates, lands in the pipeline and gets an intro call automatically.', task: 'Press "+ Capture lead", scan the sample card and save.' },
   { key: 'a2stage', screen: 'pipeline', target: 'board', title: 'A pipeline everyone can see', ref: 'FR-A2', pain: 'Pipeline status lives in personal trackers. Nobody sees what is close to an SI agreement.', gain: 'Prospect → Qualified → Proposal → SI Agreement → Active on one board, with conversion captured automatically.', task: 'Move a partner to its next stage.' },
@@ -763,8 +891,8 @@ function tour() {
 /* =====================================================================
    6. Shell: sign-in, nav, search, notifications
    ===================================================================== */
-const NAV = [['home', 'Home', 'home'], ['partners', 'Partners', 'partners'], ['pipeline', 'Pipeline', 'pipeline'], ['followups', 'Follow-ups', 'followups'], ['events', 'Events', 'events'], ['campaigns', 'Campaigns', 'campaigns'], ['dash', 'Dashboards', 'dash'], ['brd', 'BRD coverage', 'brd']];
-const SCREENS = { home: screenHome, partners: screenPartners, pipeline: screenPipeline, followups: screenFollowups, events: screenEvents, campaigns: screenCampaigns, dash: () => screenDash(false), brd: screenCoverage };
+const NAV = [['home', 'Home', 'home'], ['m360', 'Market 360', 'map'], ['partners', 'Partners', 'partners'], ['pipeline', 'Pipeline', 'pipeline'], ['followups', 'Follow-ups', 'followups'], ['events', 'Events', 'events'], ['campaigns', 'Campaigns', 'campaigns'], ['dash', 'Dashboards', 'dash'], ['brd', 'BRD coverage', 'brd']];
+const SCREENS = { home: screenHome, m360: screenM360, partners: screenPartners, pipeline: screenPipeline, followups: screenFollowups, events: screenEvents, campaigns: screenCampaigns, dash: () => screenDash(false), brd: screenCoverage };
 function login() {
   return `<div class="login"><div class="brand"><span class="eyebrow" style="color:var(--nav-muted)">DCT Abu Dhabi · International Operations</span><h1>IO CRM</h1>
     <p>Trade partners, Abu Dhabi stakeholders, pipeline, events and campaigns in one place, for every IO section.</p>
@@ -839,9 +967,9 @@ document.addEventListener('click', e => {
   if (a !== 'menu') S.menu = null;
   switch (a) {
     case 'sso': S.role = 'sec'; S.signedIn = true; S.signedAt = new Date(); break;
-    case 'signin': S.role = v; S.signedIn = true; S.signedAt = new Date(); S.screen = 'home'; break;
+    case 'signin': S.role = v; S.sel = null; S.signedIn = true; S.signedAt = new Date(); S.screen = 'home'; break;
     case 'signout': S.signedIn = false; S.drawer = null; break;
-    case 'as': S.role = v; S.signedAt = new Date(); S.drawer = null; toast(`Signed in as ${R().name}. You now see ${R().scope === 'all' ? 'all markets' : R().scope.section ? R().scope.section + ' only' : R().scope.unit + ' only'}.`); break;
+    case 'as': S.role = v; S.sel = null; S.signedAt = new Date(); S.drawer = null; toast(`Signed in as ${R().name}. You now see ${R().scope === 'all' ? 'all markets' : R().scope.section ? R().scope.section + ' only' : R().scope.unit + ' only'}.`); break;
     case 'menu': S.menu = S.menu === v ? null : v; break;
     case 'lang': S.lang = v; break;
     case 'go': S.screen = v; S.drawer = null; S.q = ''; document.querySelector('main')?.scrollTo(0, 0); break;
@@ -900,6 +1028,8 @@ document.addEventListener('click', e => {
     }
     case 'seg': { const arr = S.seg[el.dataset.k], i = arr.indexOf(v); i < 0 ? arr.push(v) : arr.splice(i, 1); S.segSaved = false; break; }
     case 'seg-save': S.segSaved = true; done('b', 'Segment synced to the newsletter tool.'); break;
+    case 'sel': S.sel = v; done('m360', `Showing ${selName(v)}.`); document.querySelector('main')?.scrollTo(0, 0); break;
+    case 'insight-task': { const pt = acct(id), y = ytd(pt); pt.insight = true; addTask({ aid: id, title: `Performance review call: ${pct(y.a / y.t)} of target`, due: dIn(1), rule: 'R4', kind: 'Call' }); hist(pt, 'Follow-up created from Market 360 insight'); done('m360', `Follow-up created for ${pt.name}, due tomorrow.`); break; }
     case 'pack': S.pack = true; done('d', 'Monthly HQ pack generated from live data.'); break;
     case 'tour-close': S.tourOpen = false; break;
     case 'tour-open': S.tourOpen = true; break;
@@ -917,6 +1047,7 @@ document.addEventListener('input', e => {
   if (lb && S.lead) { S.lead[lb] = e.target.value; if (lb === 'name') document.getElementById('ld-dup').innerHTML = dupHtml(e.target.value); }
 });
 document.addEventListener('change', e => {
+  if (e.target.id === 'm360-sel') { S.sel = e.target.value; done('m360', `Showing ${selName(S.sel)}.`); render(); return; }
   const inv = e.target.dataset.inv, f = e.target.dataset.filter;
   if (inv) { const [eid, i] = inv.split(':'), ev = events.find(z => z.id === eid), x = ev.invitees[+i]; x.status = e.target.value; hist(acct(x.aid), `Invitation to ${ev.name}: ${x.status}`); done('c2inv', `${acct(x.aid).name}: ${x.status}.`); render(); }
   if (f) { const [k, field] = f.split(':'); S[k][field] = e.target.value; done('a4', 'Dashboard filtered.'); render(); }

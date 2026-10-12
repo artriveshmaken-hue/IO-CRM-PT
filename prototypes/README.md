@@ -27,6 +27,7 @@ Once a variant wins, write down the verdict, rebuild it properly in D365 / Power
 
 The scope is the BRD only. The IO operating summary was used for context (sections, units, partner and event types).
 
+- **Market 360:** a consolidated picture of All IO, a section or a country. It shows guest performance against target (actuals joined from the JMP Tracker and partner reports via the FR-D1 data model), a tile map to drill down, generated "what needs attention" insights, and a partner table that puts performance, contact, follow-ups, events and co-marketing on one row, plus pipeline, trade promotion, campaigns and engagement across IO.
 - **Basics:** sign-in (DCT single sign-on, simulated) with four role-scoped personas (Section Lead Europe, Unit Head DACH, PR & Marketing Officer, IO Leadership & PMO); search; notifications; activity logging and record history; EN / عربي switch
 - **Workstream A:** partner master with de-duplication (FR-A1); mobile lead capture and the Prospect → Active pipeline with a conversion trend (FR-A2); cadence rules creating and escalating follow-ups (FR-A3); partner and pipeline dashboards plus a personal view (FR-A4)
 - **Workstream B:** segments synced to the existing newsletter tool (FR-B1); co-marketing per partnership (FR-B2); performance (FR-B3)
@@ -34,6 +35,6 @@ The scope is the BRD only. The IO operating summary was used for context (sectio
 - **Workstream D:** row-level access (FR-D1); leadership view and an auto-generated monthly HQ pack (FR-D2)
 - **BRD coverage page:** each requirement mapped to where it appears, plus the out-of-scope items and the open-item assumptions
 
-A 12-step guided tour ends on the BRD §2.3 success criteria. All data is fictional.
+A 13-step guided tour ends on the BRD §2.3 success criteria. All data is fictional.
 
 **Run:** open the file in a browser, or use the published Artifact link.
