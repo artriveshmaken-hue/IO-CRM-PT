@@ -20,3 +20,11 @@ Use the floating bar at the bottom, the ← / → keys, or `?variant=` in the UR
 Everything is grounded in the BRD (DCT-IO-CRM-BRD v1.0): FR-A2 stages, FR-A3/C3 auto follow-ups, FR-A4 90-day at-risk rule, FR-C2 invitations and mobile capture, FR-C4 engagement history across IO sections, NFR 7 Arabic/English (EN / عربي toggle), NFR 8 offline capture.
 
 Once a variant wins, write down the verdict, rebuild it properly in D365 / Power Apps, and keep this file on a throwaway branch only.
+
+## `value-demo/io-crm-value-demo.prototype.html`: IO CRM value demo
+
+**Question:** does a working IO CRM show the people who will use it the value the BRD promises?
+
+This is a clickable demo of one working day for a Europe section lead, with a guided tour of 9 steps. Each step pairs a problem from the BRD's current-state analysis (Excel per section, WhatsApp, Outlook lists, manual HQ packs) with the CRM feature that solves it, then asks the viewer to try that feature: merge duplicates, read the history across sections, move the pipeline, complete an automatic follow-up, log an event meeting offline, build a campaign segment, and switch to the leadership view of the HQ report. The final step checks the results against BRD §2.3 success criteria.
+
+**Run:** open the file in a browser, or use the published Artifact link.

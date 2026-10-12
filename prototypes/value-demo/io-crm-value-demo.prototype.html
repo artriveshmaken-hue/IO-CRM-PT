@@ -1,0 +1,739 @@
+<title>IO CRM Value Demo</title>
+<!--
+  PROTOTYPE: throwaway, sample data only, nothing is saved (reload resets).
+  Question: does a working IO CRM show the value promised in the BRD (DCT-IO-CRM-BRD v1.0) to the people who will use it?
+  A clickable demo of one week for a Europe section lead, with a guided tour that pairs each pain from the BRD's
+  current-state analysis with the CRM feature that removes it. Every step maps to a functional requirement.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans+Arabic:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: app shell. Dark nav rail | working screen | guided-tour column (a bottom sheet on phones). */
+:root{
+  --bg:#f2f5f6;--surface:#ffffff;--sunk:#e8edef;--ink:#13212a;--muted:#5a6872;--line:#d6dee2;
+  --accent:#0b6e75;--accent-ink:#ffffff;--accent-soft:#dcefef;
+  --mark:#b97c0c;--mark-soft:#fbf0d8;
+  --ok:#2c7a4c;--ok-soft:#e0f1e6;--risk:#b3261e;--risk-soft:#fbe4e1;--warn:#956000;--warn-soft:#fbefd4;--info:#2f5f9a;--info-soft:#e2ebf7;
+  --nav:#10262d;--nav-ink:#dbe8ea;--nav-muted:#8fa9ae;--nav-on:#1f434c;
+  --shadow:0 1px 2px rgba(16,38,45,.06),0 6px 18px rgba(16,38,45,.06);
+  --f-ui:"IBM Plex Sans","IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e171b;--surface:#152228;--sunk:#1b2b32;--ink:#e6eef0;--muted:#97a8ae;--line:#26393f;
+  --accent:#4fbcc2;--accent-ink:#06282b;--accent-soft:#163a3e;
+  --mark:#e8b04a;--mark-soft:#3a2e14;
+  --ok:#6cc690;--ok-soft:#173326;--risk:#f08a80;--risk-soft:#3d1d1a;--warn:#e7b04f;--warn-soft:#3a2d12;--info:#86b2e6;--info-soft:#18293f;
+  --nav:#0a1316;--nav-ink:#d4e2e5;--nav-muted:#7f979c;--nav-on:#18323a;
+  --shadow:0 1px 2px rgba(0,0,0,.35),0 6px 18px rgba(0,0,0,.25);color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0e171b;--surface:#152228;--sunk:#1b2b32;--ink:#e6eef0;--muted:#97a8ae;--line:#26393f;
+  --accent:#4fbcc2;--accent-ink:#06282b;--accent-soft:#163a3e;
+  --mark:#e8b04a;--mark-soft:#3a2e14;
+  --ok:#6cc690;--ok-soft:#173326;--risk:#f08a80;--risk-soft:#3d1d1a;--warn:#e7b04f;--warn-soft:#3a2d12;--info:#86b2e6;--info-soft:#18293f;
+  --nav:#0a1316;--nav-ink:#d4e2e5;--nav-muted:#7f979c;--nav-on:#18323a;
+  --shadow:0 1px 2px rgba(0,0,0,.35),0 6px 18px rgba(0,0,0,.25);color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--f-ui)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3,h4{margin:0;line-height:1.25;text-wrap:balance}
+h1{font-size:24px;font-weight:600;letter-spacing:-.01em}
+h2{font-size:16px;font-weight:600}
+h3{font-size:14px;font-weight:600}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.mono{font-family:var(--f-mono);font-size:12px}
+.num{font-variant-numeric:tabular-nums}
+
+/* shell */
+.shell{display:grid;grid-template-columns:208px minmax(0,1fr) 360px;height:100%}
+.shell.tour-closed{grid-template-columns:208px minmax(0,1fr) 0}
+nav.rail{background:var(--nav);color:var(--nav-ink);display:flex;flex-direction:column;padding:16px 10px;gap:2px;overflow:auto}
+.logo{padding:4px 10px 18px;display:grid;gap:2px}
+.logo b{font-size:17px;letter-spacing:-.01em}
+.logo span{font-size:11px;color:var(--nav-muted)}
+.rail button{display:flex;align-items:center;gap:10px;border:0;background:transparent;color:var(--nav-ink);padding:9px 10px;border-radius:8px;text-align:start;font-weight:500}
+.rail button:hover{background:var(--nav-on)}
+.rail button.on{background:var(--nav-on);box-shadow:inset 3px 0 0 var(--mark)}
+[dir="rtl"] .rail button.on{box-shadow:inset -3px 0 0 var(--mark)}
+.rail .badge{margin-inline-start:auto;font-size:11px;background:var(--risk);color:#fff;border-radius:999px;padding:0 7px;font-weight:600}
+.rail .foot{margin-top:auto;padding:12px 10px 0;font-size:11px;color:var(--nav-muted);border-top:1px solid var(--nav-on)}
+.ico{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+main{overflow:auto;min-width:0}
+.topbar{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 24px}
+.topbar .grow{flex:1}
+.viewas{display:flex;align-items:center;gap:8px}
+.viewas select{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 8px;max-width:240px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:5px 10px;font-size:12px}
+.seg button.on{background:var(--ink);color:var(--bg)}
+.screen{padding:24px;display:grid;gap:20px;max-width:1180px}
+.head{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px}
+.head .grow{flex:1;min-width:220px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.pad{padding:16px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border-radius:999px;font-size:12px;background:var(--sunk);color:var(--muted);white-space:nowrap;font-weight:500}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chip.risk{background:var(--risk-soft);color:var(--risk)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.info{background:var(--info-soft);color:var(--info)}
+.chip.accent{background:var(--accent-soft);color:var(--accent)}
+.chip.mark{background:var(--mark-soft);color:var(--mark)}
+.cc{font-family:var(--f-mono);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px;font-weight:500}
+.btn:hover{background:var(--sunk)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.sm{padding:4px 9px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.wrap{flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:20px;align-items:start}
+.list>*+*{border-top:1px solid var(--line)}
+.item{display:flex;gap:12px;padding:12px 16px;align-items:flex-start}
+.item .body{flex:1;min-width:0}
+.check{width:22px;height:22px;flex:none;border-radius:50%;border:2px solid var(--line);background:transparent;padding:0;display:grid;place-items:center;color:#fff;font-size:12px}
+.check:hover{border-color:var(--ok)}
+.check.on{background:var(--ok);border-color:var(--ok)}
+.done .title{text-decoration:line-through;color:var(--muted)}
+.title{font-weight:500}
+.empty{padding:20px;text-align:center;color:var(--muted)}
+.notice{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:10px;background:var(--info-soft);color:var(--info);font-size:13px}
+.notice.mark{background:var(--mark-soft);color:var(--warn)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:start;padding:9px 12px;border-top:1px solid var(--line);vertical-align:middle}
+th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-top:0;white-space:nowrap}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--sunk)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kpi{padding:14px 16px}
+.kpi b{display:block;font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.2;margin-top:2px}
+.kpi.risk b{color:var(--risk)}
+.bar{display:flex;height:8px;border-radius:999px;overflow:hidden;background:var(--sunk)}
+.bar i{display:block;height:100%}
+
+/* spotlight from the tour */
+.spot{animation:spot 1.4s ease-out 2;outline:3px solid var(--mark);outline-offset:3px;border-radius:12px}
+@keyframes spot{0%{outline-color:var(--mark)}60%{outline-color:transparent}100%{outline-color:var(--mark)}}
+@media (prefers-reduced-motion:reduce){.spot{animation:none}}
+
+/* duplicates */
+.dupe{display:grid;grid-template-columns:1.3fr 1fr 1fr .8fr;gap:10px;padding:10px 16px;font-size:13px;align-items:center}
+.dupe.headrow{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;padding-block:6px}
+.diff{background:var(--mark-soft);color:var(--warn);border-radius:4px;padding:0 3px}
+
+/* board */
+.board{display:grid;grid-template-columns:repeat(5,minmax(170px,1fr));gap:10px;overflow-x:auto;padding-bottom:4px}
+.col{background:var(--sunk);border-radius:12px;padding:10px;display:grid;gap:8px;align-content:start;min-height:180px}
+.col h3{display:flex;justify-content:space-between;font-size:13px;padding:2px 4px}
+.pcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;display:grid;gap:6px}
+.pcard.risk{border-color:var(--risk)}
+.pcard .name{font-weight:600;font-size:13px}
+
+/* events */
+.funnel{display:grid;gap:8px}
+.funnel .f{display:grid;grid-template-columns:150px 1fr 48px;gap:10px;align-items:center;font-size:13px}
+.funnel .f .bar{height:14px;border-radius:4px}
+
+/* drawer + phone sheet */
+.overlay{position:fixed;inset:0;background:rgba(10,20,24,.45);z-index:30}
+.drawer{position:fixed;top:0;bottom:0;inset-inline-end:0;width:min(520px,100%);background:var(--surface);z-index:31;overflow:auto;box-shadow:var(--shadow);padding:20px;display:grid;gap:16px;align-content:start}
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding-block:12px;border-block:1px solid var(--line)}
+.facts span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.facts b{font-weight:600}
+.tl{list-style:none;margin:0;padding:0;display:grid}
+.tl li{display:grid;grid-template-columns:72px 88px 1fr;gap:10px;padding:9px 0;border-top:1px dashed var(--line);font-size:13px}
+.tl li:first-child{border-top:0}
+.phone{position:fixed;z-index:31;left:50%;top:50%;transform:translate(-50%,-50%);width:min(380px,calc(100% - 32px));max-height:calc(100% - 32px);overflow:auto;background:var(--bg);border-radius:28px;border:8px solid #0b1215;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.phone .ph-top{background:var(--accent);color:var(--accent-ink);padding:16px}
+.phone .ph-body{padding:14px;display:grid;gap:12px}
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.opts button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 4px;font-size:13px}
+.opts button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+label.f{display:grid;gap:4px;font-size:12px;color:var(--muted)}
+input,select,textarea{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px;width:100%}
+textarea{min-height:64px;resize:vertical}
+.toggles{display:flex;flex-wrap:wrap;gap:6px}
+.toggles button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 10px;font-size:12px}
+.toggles button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+/* tour */
+aside.tour{background:var(--surface);border-inline-start:1px solid var(--line);overflow:auto;display:flex;flex-direction:column;min-width:0}
+.tour-closed aside.tour{display:none}
+.tour-head{padding:16px 18px 12px;border-bottom:1px solid var(--line);display:grid;gap:10px}
+.dots{display:flex;gap:4px}
+.dots button{flex:1;height:6px;border:0;border-radius:999px;background:var(--sunk);padding:0}
+.dots button.seen{background:var(--accent-soft)}
+.dots button.ok{background:var(--ok)}
+.dots button.cur{outline:2px solid var(--mark);outline-offset:1px}
+.tour-body{padding:18px;display:grid;gap:14px;align-content:start;flex:1}
+.tour-body h2{font-size:20px;letter-spacing:-.01em}
+.ref{font-family:var(--f-mono);font-size:11px;color:var(--accent)}
+.pain,.gain{border-radius:10px;padding:12px 14px;font-size:13px;display:grid;gap:4px}
+.pain{background:var(--sunk)}
+.pain b{color:var(--risk);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.gain{background:var(--accent-soft)}
+.gain b{color:var(--accent);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.task{border:1px dashed var(--mark);border-radius:10px;padding:12px 14px;display:grid;gap:8px;font-size:13px}
+.task.ok{border-style:solid;border-color:var(--ok);background:var(--ok-soft)}
+.tour-foot{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:space-between;position:sticky;bottom:0;background:var(--surface)}
+.proof{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.proof li{display:grid;grid-template-columns:22px 1fr;gap:8px;font-size:13px}
+.proof .tick{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;background:var(--sunk);color:var(--muted)}
+.proof .tick.on{background:var(--ok);color:#fff}
+.tour-fab{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));inset-inline-end:16px;z-index:20}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:10px;z-index:40;font-weight:500;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
+
+@media (max-width:1100px){
+  .shell,.shell.tour-closed{grid-template-columns:72px minmax(0,1fr)}
+  .rail .lbl,.logo span,.rail .foot,.rail .badge{display:none}
+  .logo{padding:4px 0 14px;text-align:center}
+  .rail button{justify-content:center}
+  aside.tour{position:fixed;inset:auto 0 0 auto;width:min(380px,100%);max-height:72%;border:1px solid var(--line);border-radius:16px 16px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.2);z-index:25}
+  .grid2{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .shell,.shell.tour-closed{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  nav.rail{flex-direction:row;padding:6px 8px;overflow-x:auto;gap:2px}
+  .logo{display:none}
+  .rail button{padding:8px 10px}
+  .rail button.on{box-shadow:inset 0 -3px 0 var(--mark)}
+  .topbar{padding:10px 16px}
+  .screen{padding:16px}
+  aside.tour{width:100%;max-height:70%}
+  .dupe{grid-template-columns:1fr 1fr}
+  .dupe .hide-sm{display:none}
+  .facts{grid-template-columns:repeat(2,1fr)}
+  .funnel .f{grid-template-columns:110px 1fr 40px}
+  .tl li{grid-template-columns:60px 1fr}
+  .tl li .sec{display:none}
+}
+</style>
+
+<div id="app"></div>
+
+<script>
+/* ============================================================
+   Sample data (fictional). Dates are relative to today.
+   ============================================================ */
+const DAY = 864e5, NOW = new Date();
+const T0 = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
+const at = (d, h, m = 0) => { const x = new Date(T0.getTime() + d * DAY); if (h !== undefined) x.setHours(h, m); return x; };
+const STAGES = ['Prospect', 'Qualified', 'Proposal', 'SI Agreement', 'Active'];
+const STAGE_COLORS = ['#9fb0b8', '#6f9fd3', '#d9a541', '#c9785b', '#2c7a4c'];
+const SECTIONS = ['Europe', 'GCC', 'APAC', 'UK & US'];
+const RISK = 90;
+
+const P = (id, sec, name, cc, type, tier, stage, last, poc, rn, history = []) => ({ id, sec, name, cc, type, tier, stage, last, poc, rn, history });
+const H = (d, sec, text) => ({ d, sec, text });
+
+const S = {
+  role: 'layla', lang: 'en', screen: 'today', step: 0, tourOpen: true, spot: null, toast: null,
+  merged: false, profileId: null, eventId: 'e4', capture: null, online: true, quickLead: false,
+  seg: { cc: ['DE', 'AT', 'CH'], type: [], tier: ['Gold', 'Silver'] }, segSaved: false,
+  done: { merge: false, history: false, stage: false, followup: false, capture: false, segment: false, report: false },
+  partners: [
+    P('p1', 'Europe', 'Alpenblick Reisen GmbH', 'DE', 'Tour operator', 'Gold', 'Active', 12, 'Katrin Vogel', 4200,
+      [H(-12, 'Europe', 'Paris Roadshow: met at stand, interested in Q1 campaign'), H(-40, 'Europe', 'Co-marketing campaign closed: 2,140 click-throughs')]),
+    P('p2', 'Europe', 'Voyages Lumière', 'FR', 'Luxury agency', 'Gold', 'SI Agreement', 6, 'Julien Marchand', 1800, [H(-6, 'Europe', 'SI agreement draft sent')]),
+    P('p3', 'Europe', 'Viaggi Aurora', 'IT', 'Tour operator', 'Silver', 'Proposal', 21, 'Giulia Ferri', 2600, [H(-21, 'Europe', 'Proposal sent: summer 2027 allocation')]),
+    P('p4', 'Europe', 'Nordlys Travel AB', 'SE', 'OTA', 'Silver', 'Active', 104, 'Erik Lindqvist', 3100, [H(-104, 'Europe', 'Quarterly review call')]),
+    P('p5', 'Europe', 'Costa Clara Viajes', 'ES', 'Tour operator', 'Bronze', 'Qualified', 33, 'Lucía Romero', 900),
+    P('p6', 'Europe', 'Tulip Way Holidays', 'NL', 'OTA', 'Silver', 'Active', 97, 'Daan de Vries', 2700, [H(-97, 'Europe', 'Newsletter opened, no reply to follow-up')]),
+    P('p7', 'Europe', 'Helvetia Luxe Journeys', 'CH', 'Luxury agency', 'Gold', 'Proposal', 9, 'Martina Keller', 1500, [H(-9, 'Europe', 'Nominated 2 agents for winter FAM trip')]),
+    P('p8', 'Europe', 'Danube Select', 'AT', 'Tour operator', 'Bronze', 'Prospect', 2, 'Felix Huber', 600, [H(-2, 'Europe', 'Lead captured on mobile')]),
+    P('p9', 'Europe', 'Baltic Horizons', 'PL', 'Tour operator', 'Bronze', 'Prospect', 15, 'Agnieszka Nowak', 700),
+    P('p10', 'Europe', 'Skyline Charter Air', 'DE', 'Airline', 'Gold', 'Active', 128, 'Jonas Weber', 6400, [H(-128, 'Europe', 'Charter series wrap-up meeting')]),
+    P('p11', 'Europe', 'Belle Époque Voyages', 'BE', 'Luxury agency', 'Silver', 'Qualified', 41, 'Claire Dubois', 800, [H(-12, 'Europe', 'Paris Roadshow: asked for luxury product deck')]),
+    P('p12', 'Europe', 'Aegean Blue Tours', 'GR', 'Tour operator', 'Silver', 'Active', 28, 'Nikos Pappas', 1900),
+    P('p13', 'Europe', 'Hygge Rejser', 'DK', 'OTA', 'Bronze', 'SI Agreement', 18, 'Mette Hansen', 1200),
+    P('p14', 'Europe', 'Lisboa Prime Travel', 'PT', 'Tour operator', 'Bronze', 'Qualified', 61, 'Rui Costa', 650),
+    P('g1', 'GCC', 'Najd Journeys', 'SA', 'Tour operator', 'Gold', 'Active', 8, 'Faisal Al Harbi', 5200),
+    P('g2', 'GCC', 'Pearl Coast Tours', 'BH', 'Tour operator', 'Silver', 'Proposal', 19, 'Mariam Yusuf', 1400),
+    P('g3', 'GCC', 'Al Waha Holidays', 'KW', 'OTA', 'Silver', 'Active', 93, 'Yousef Al Sabah', 2300),
+    P('a1', 'APAC', 'Sakura Gateway', 'JP', 'Tour operator', 'Gold', 'SI Agreement', 11, 'Haruto Sato', 2900),
+    P('a2', 'APAC', 'Lotus Trails', 'IN', 'OTA', 'Silver', 'Active', 36, 'Priya Nair', 4100),
+    P('a3', 'APAC', 'Harbour Line Travel', 'AU', 'Luxury agency', 'Bronze', 'Qualified', 52, 'Chloe Brennan', 700),
+    P('u1', 'UK & US', 'Thames & Co Travel', 'GB', 'Tour operator', 'Gold', 'Active', 14, 'Oliver Grant', 4800),
+    P('u2', 'UK & US', 'Liberty Voyages', 'US', 'Luxury agency', 'Silver', 'Proposal', 27, 'Ava Morales', 1600),
+    P('u3', 'UK & US', 'Highland Select', 'GB', 'Tour operator', 'Bronze', 'Active', 101, 'Callum Reid', 900),
+  ],
+  // Three section spreadsheets hold the same airline under three spellings.
+  dupes: [
+    { file: 'Europe partners 2026.xlsx', sec: 'Europe', name: 'Skyline Charter Air', poc: 'Jonas Weber', email: 'j.weber@skyline-charter.example', last: 128 },
+    { file: 'UK&US trade tracker.xlsx', sec: 'UK & US', name: 'SkyLine Charter Air GmbH', poc: 'J. Weber', email: 'jonas.weber@skyline-charter.example', last: 55 },
+    { file: 'GCC partners master.xlsx', sec: 'GCC', name: 'Skyline Charter', poc: 'Jonas Weber', email: 'j.weber@skyline-charter.example', last: 40 },
+  ],
+  tasks: [
+    { id: 't1', kind: 'Follow-up', pid: 'p4', title: 'Re-engage: check Q4 allocation', due: at(-3), auto: '90-day rule' },
+    { id: 't2', kind: 'Call', pid: 'p3', title: 'Walk Giulia through proposal pricing', due: at(-1, 15), auto: 'Engagement cadence' },
+    { id: 't3', kind: 'Meeting', pid: 'p1', title: 'Q1 2027 campaign planning', due: at(0, 10), place: 'Stand 212', ev: 'e4' },
+    { id: 't4', kind: 'Meeting', pid: 'p10', title: 'Re-open charter series talks', due: at(0, 11, 30), place: 'Stand 212', ev: 'e4' },
+    { id: 't5', kind: 'Meeting', pid: 'p8', title: 'First meeting: product intro', due: at(0, 14), place: 'Stand 212', ev: 'e4' },
+    { id: 't6', kind: 'Meeting', pid: 'p12', title: 'Spring programme review', due: at(0, 15, 30), place: 'Stand 212', ev: 'e4' },
+    { id: 't7', kind: 'Follow-up', pid: 'p11', title: 'Send Abu Dhabi luxury product deck', due: at(0), auto: 'After Paris Roadshow' },
+    { id: 't8', kind: 'Follow-up', pid: 'p5', title: 'Share winter-season itineraries', due: at(0), auto: 'After Paris Roadshow' },
+    { id: 't9', kind: 'Follow-up', pid: 'p6', title: 'Re-engage: 97 days since last contact', due: at(1), auto: '90-day rule' },
+    { id: 't10', kind: 'Call', pid: 'p9', title: 'Intro call: qualify interest', due: at(2, 10), auto: 'Engagement cadence' },
+    { id: 'x1', kind: 'Follow-up', pid: 'g3', title: 'Re-engage: 93 days since last contact', due: at(-2), auto: '90-day rule' },
+    { id: 'x2', kind: 'Follow-up', pid: 'u3', title: 'Escalated: 101 days, no contact', due: at(-4), auto: 'Escalation' },
+    { id: 'x3', kind: 'Call', pid: 'a3', title: 'Qualify luxury programme interest', due: at(0, 9), auto: 'Engagement cadence' },
+  ],
+  events: [
+    { id: 'e4', name: 'Munich Travel Trade Day', type: 'Exhibition', city: 'Munich', sec: 'Europe', start: at(0), status: 'Live', invited: 35, confirmed: 22, declined: 4, checkedIn: 9 },
+    { id: 'e1', name: 'Paris Roadshow', type: 'Roadshow', city: 'Paris', sec: 'Europe', start: at(-12), status: 'Completed', invited: 42, confirmed: 31, declined: 6, checkedIn: 27, meetings: 19, fuDone: 11, progressed: 3, leads: 4 },
+    { id: 'e2', name: 'Winter FAM trip: luxury agents', type: 'FAM trip', city: 'Abu Dhabi', sec: 'Europe', start: at(9), status: 'Planned', invited: 14, confirmed: 7, declined: 2, checkedIn: 0 },
+    { id: 'e3', name: 'Riyadh B2B Workshop', type: 'Roadshow', city: 'Riyadh', sec: 'GCC', start: at(5), status: 'Planned', invited: 40, confirmed: 26, declined: 3, checkedIn: 0 },
+    { id: 'e5', name: 'Tokyo Sales Mission', type: 'Roadshow', city: 'Tokyo', sec: 'APAC', start: at(-20), status: 'Completed', invited: 30, confirmed: 24, declined: 2, checkedIn: 21, meetings: 15, fuDone: 15, progressed: 2, leads: 3 },
+  ],
+  campaigns: [
+    { name: 'Winter in Abu Dhabi', pid: 'p1', channel: 'Partner newsletter + paid social', reach: 184000, clicks: 2140, leads: 37 },
+    { name: 'Culture weekends', pid: 'p12', channel: 'Partner website banner', reach: 62000, clicks: 910, leads: 12 },
+    { name: 'Stopover packages', pid: 'p10', channel: 'In-flight magazine + email', reach: 240000, clicks: 3320, leads: 58 },
+  ],
+};
+S.tasks.forEach(t => { t.allDay = !t.due.getHours() && !t.due.getMinutes(); t.done = false; });
+
+/* ============================================================
+   Domain logic (pure over S)
+   ============================================================ */
+const partner = id => S.partners.find(p => p.id === id);
+const visible = () => S.role === 'layla' ? S.partners.filter(p => p.sec === 'Europe') : S.partners;
+const visibleIds = () => new Set(visible().map(p => p.id));
+const atRisk = p => p.stage !== 'Prospect' && p.last >= RISK;
+const myTasks = () => { const ids = visibleIds(); return S.tasks.filter(t => ids.has(t.pid)); };
+const isToday = t => t.due >= T0 && t.due < at(1);
+const overdue = () => myTasks().filter(t => !t.done && t.due < T0).sort((a, b) => a.due - b.due);
+
+function touch(pid, text) { const p = partner(pid); p.last = 0; p.history.unshift(H(0, 'Europe', text)); }
+function completeTask(id) {
+  const t = S.tasks.find(x => x.id === id); t.done = !t.done;
+  if (t.done) { touch(t.pid, `${t.kind} done: ${t.title}`); if (t.auto) S.done.followup = true; }
+}
+function mergeDupes() {
+  const p = partner('p10');
+  S.merged = true; S.done.merge = true;
+  p.last = Math.min(...S.dupes.map(d => d.last));
+  p.history.push(H(-55, 'UK & US', 'Joint fare promotion discussed with UK & US section'), H(-40, 'GCC', 'GCC section hosted a stopover planning call'));
+  p.history.sort((a, b) => b.d - a.d);
+  p.mergedFrom = S.dupes.map(d => d.file);
+}
+function moveStage(pid) {
+  const p = partner(pid), i = STAGES.indexOf(p.stage);
+  if (i < STAGES.length - 1) { p.stage = STAGES[i + 1]; touch(pid, 'Stage moved to ' + p.stage); S.done.stage = true; }
+}
+function addLead({ name, cc, poc }) {
+  const id = 'n' + Date.now();
+  S.partners.push(P(id, 'Europe', name, (cc || 'DE').toUpperCase().slice(0, 2), 'Tour operator', 'Bronze', 'Prospect', 0, poc || '-', 0, [H(0, 'Europe', 'Lead captured with quick create')]));
+  S.tasks.push({ id: 'q' + id, kind: 'Call', pid: id, title: 'Intro call: qualify interest', due: at(2), allDay: true, done: false, auto: 'New lead cadence' });
+  S.done.stage = true;
+}
+function captureMeeting(tid, { outcome, next, notes }) {
+  const t = S.tasks.find(x => x.id === tid), ev = S.events.find(e => e.id === t.ev);
+  t.done = true; t.outcome = outcome; t.pending = !S.online; ev.checkedIn++;
+  touch(t.pid, `Met at ${ev.name} (${outcome.toLowerCase()})${notes ? ': ' + notes : ''}`);
+  if (next !== 'No follow-up needed') S.tasks.push({ id: 'f' + Date.now(), kind: 'Follow-up', pid: t.pid, title: next, due: at(3), allDay: true, done: false, auto: 'After ' + ev.name, fromEv: ev.id, pending: !S.online });
+  if (outcome === 'Positive') { const p = partner(t.pid); if (p.stage === 'Prospect') p.stage = 'Qualified'; }
+  S.done.capture = true;
+}
+const pending = () => S.tasks.filter(t => t.pending).length;
+const segAudience = () => S.partners.filter(p => (!S.seg.cc.length || S.seg.cc.includes(p.cc)) && (!S.seg.type.length || S.seg.type.includes(p.type)) && (!S.seg.tier.length || S.seg.tier.includes(p.tier)) && visibleIds().has(p.id));
+
+/* ============================================================
+   Formatting + tiny i18n (NFR 7: navigation and headings)
+   ============================================================ */
+const AR = { 'Today': 'اليوم', 'Partners': 'الشركاء', 'Pipeline': 'مسار الصفقات', 'Events': 'الفعاليات', 'Campaigns': 'الحملات', 'HQ report': 'تقرير المقر',
+  'Prospect': 'محتمل', 'Qualified': 'مؤهل', 'Proposal': 'عرض', 'SI Agreement': 'اتفاقية حوافز', 'Active': 'نشط', 'Overdue': 'متأخر', 'Due today': 'مستحق اليوم',
+  'Needs attention': 'يحتاج إلى اهتمام', 'Viewing as': 'العرض بصفة', 'Guided tour': 'جولة إرشادية' };
+const t = s => (S.lang === 'ar' && AR[s]) || s;
+const loc = () => S.lang === 'ar' ? 'ar-AE' : 'en-GB';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fTime = d => d.toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' });
+const fDay = d => d.toLocaleDateString(loc(), { weekday: 'short', day: 'numeric', month: 'short' });
+const fLong = d => d.toLocaleDateString(loc(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+const fNum = n => n.toLocaleString(loc());
+const ago = n => n === 0 ? 'today' : `${n}d ago`;
+const dueTxt = x => { const n = Math.round((new Date(x.due.getFullYear(), x.due.getMonth(), x.due.getDate()) - T0) / DAY); return n < 0 ? `${-n}d overdue` : n === 0 ? (x.allDay ? 'today' : fTime(x.due)) : n === 1 ? 'tomorrow' : fDay(x.due); };
+const lastChip = p => `<span class="chip ${atRisk(p) ? 'risk' : p.last > 45 ? 'warn' : ''}">${ago(p.last)}</span>`;
+const pname = p => `<span class="title">${esc(p.name)}</span> <span class="cc">${p.cc}</span>`;
+const spot = k => `data-spot="${k}"`;
+
+const ICONS = {
+  today: '<path d="M4 6h16M4 12h10M4 18h7"/><circle cx="18" cy="16" r="3"/>',
+  partners: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.5a3 3 0 0 1 0 6M18 14c2 .7 3 2.7 3 6"/>',
+  pipeline: '<rect x="3" y="4" width="4.5" height="16" rx="1"/><rect x="9.75" y="4" width="4.5" height="11" rx="1"/><rect x="16.5" y="4" width="4.5" height="6" rx="1"/>',
+  events: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  campaigns: '<path d="M4 10v4l11 5V5L4 10z"/><path d="M15 9.5a3 3 0 0 1 0 5M7 14l1.5 5"/>',
+  report: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 17v-3M12 17v-6M15 17v-4"/>',
+};
+const icon = k => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]}</svg>`;
+
+/* ============================================================
+   Screens
+   ============================================================ */
+function screenToday() {
+  const od = overdue();
+  const today = myTasks().filter(isToday).sort((a, b) => (a.allDay - b.allDay) || (a.due - b.due));
+  const risky = visible().filter(atRisk).sort((a, b) => b.last - a.last);
+  const ev = S.events.find(e => e.status === 'Live');
+  const item = x => {
+    const p = partner(x.pid);
+    return `<div class="item ${x.done ? 'done' : ''}">
+      <button class="check ${x.done ? 'on' : ''}" data-act="task" data-id="${x.id}" aria-label="Mark done">${x.done ? '✓' : ''}</button>
+      <div class="body"><div class="title">${esc(x.title)}</div>
+        <div class="small muted">${x.kind} · ${esc(p.name)} <span class="cc">${p.cc}</span>${x.place ? ' · ' + esc(x.place) : ''}</div>
+        ${x.auto ? `<div style="margin-top:4px"><span class="chip accent">Created automatically · ${esc(x.auto)}</span>${x.pending ? ' <span class="chip warn">Waiting to sync</span>' : ''}</div>` : ''}
+      </div>
+      <span class="small num ${x.due < T0 && !x.done ? '' : 'muted'}" style="${x.due < T0 && !x.done ? 'color:var(--risk);font-weight:600' : ''}">${dueTxt(x)}</span>
+    </div>`;
+  };
+  return `<div class="head"><div class="grow"><div class="muted">${fLong(NOW)}</div><h1>${S.role === 'layla' ? 'Good morning, Layla' : 'IO overview: all sections'}</h1></div>
+      ${ev && S.role === 'layla' ? `<button class="btn" data-act="go" data-v="events">${esc(ev.name)} is live today →</button>` : ''}</div>
+    <div class="grid2">
+      <div style="display:grid;gap:20px">
+        <section class="card" ${spot('overdue')}><div class="pad row between" style="padding-bottom:8px"><h2 style="color:var(--risk)">${t('Overdue')} · ${od.length}</h2><span class="small muted">The CRM creates these from your follow-up rules</span></div>
+          <div class="list">${od.map(item).join('') || '<div class="empty">Nothing overdue.</div>'}</div></section>
+        <section class="card"><div class="pad" style="padding-bottom:8px"><h2>${t('Due today')} · ${today.filter(x => !x.done).length}</h2></div>
+          <div class="list">${today.map(item).join('') || '<div class="empty">Nothing due today.</div>'}</div></section>
+      </div>
+      <div style="display:grid;gap:20px">
+        <section class="card pad" style="display:grid;gap:10px" ${spot('risk')}>
+          <div class="row between"><h2>${t('Needs attention')}</h2><span class="chip risk">${risky.length} partners</span></div>
+          <div class="small muted">Active partners with no contact for 90+ days, from any section.</div>
+          ${risky.map(p => `<div class="row between"><div style="min-width:0">${pname(p)}<div class="small muted">${p.type} · ${t(p.stage)}${S.role !== 'layla' ? ' · ' + p.sec : ''}</div></div>${lastChip(p)}</div>`).join('') || '<div class="muted small">No partners at risk.</div>'}
+        </section>
+        ${pipelineMini()}
+      </div>
+    </div>`;
+}
+function pipelineMini() {
+  const ps = visible(), counts = STAGES.map(s => ps.filter(p => p.stage === s).length), n = ps.length;
+  return `<section class="card pad" style="display:grid;gap:10px"><div class="row between"><h2>${t('Pipeline')}</h2><button class="btn ghost sm" data-act="go" data-v="pipeline">Open →</button></div>
+    <div class="bar" style="height:10px">${counts.map((c, i) => `<i style="width:${c / n * 100}%;background:${STAGE_COLORS[i]}"></i>`).join('')}</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px" class="small muted">${STAGES.map((s, i) => `<div><b class="num" style="display:block;font-size:18px;color:var(--ink)">${counts[i]}</b>${t(s)}</div>`).join('')}</div></section>`;
+}
+
+function screenPartners() {
+  const ps = visible().slice().sort((a, b) => a.name.localeCompare(b.name));
+  const showDupes = !S.merged && (S.role === 'layla' || true);
+  return `<div class="head"><div class="grow"><h1>${t('Partners')}</h1><div class="muted">${ps.length} partner records · ${S.role === 'layla' ? 'Europe section' : 'all IO sections'}</div></div></div>
+    ${S.role === 'layla' ? `<div class="notice"><span>🔒</span><span>You see Europe records only. IO Leadership sees every section (row-level security, NFR 10).</span></div>` : ''}
+    ${showDupes ? `<section class="card" ${spot('dupes')}>
+      <div class="pad row between wrap"><div><h2>Possible duplicate found during migration</h2><div class="small muted">Matched on email domain and contact name across 3 section spreadsheets</div></div>
+        <button class="btn primary" data-act="merge">Merge into one record</button></div>
+      <div class="dupe headrow"><span>Name in file</span><span>Source file</span><span class="hide-sm">Contact</span><span>Last contact</span></div>
+      <div class="list">${S.dupes.map(d => `<div class="dupe"><span><span class="${d.name !== 'Skyline Charter Air' ? 'diff' : ''}">${esc(d.name)}</span></span><span class="mono">${esc(d.file)}</span><span class="hide-sm ${d.poc !== 'Jonas Weber' ? 'diff' : ''}">${esc(d.poc)}</span><span class="num">${ago(d.last)} <span class="muted small">(${d.sec})</span></span></div>`).join('')}</div>
+    </section>` : `<div class="notice" style="background:var(--ok-soft);color:var(--ok)"><span>✓</span><span>Skyline Charter Air is now one record built from 3 section files. Its real last contact is 40 days ago (GCC), so it no longer counts as at risk.</span></div>`}
+    <section class="card table-wrap"><table>
+      <thead><tr><th>Partner</th>${S.role !== 'layla' ? '<th>Section</th>' : ''}<th>Type</th><th>Tier</th><th>Stage</th><th>Last contact</th><th>Sections in history</th></tr></thead>
+      <tbody>${ps.map(p => { const secs = [...new Set(p.history.map(h => h.sec))]; return `<tr class="click" data-act="profile" data-id="${p.id}" ${p.id === 'p10' ? spot('p10row') : ''}>
+        <td>${pname(p)}</td>${S.role !== 'layla' ? `<td>${p.sec}</td>` : ''}<td class="muted">${p.type}</td><td>${p.tier}</td><td>${t(p.stage)}</td><td>${lastChip(p)}</td>
+        <td>${secs.map(s => `<span class="chip ${s === 'Europe' ? 'accent' : 'info'}">${s}</span>`).join(' ') || '<span class="muted small">-</span>'}</td></tr>`; }).join('')}</tbody></table></section>`;
+}
+
+function profileDrawer() {
+  const p = partner(S.profileId); if (!p) return '';
+  const open = S.tasks.filter(x => x.pid === p.id && !x.done);
+  return `<div class="overlay" data-act="close-profile"></div><aside class="drawer" role="dialog" aria-label="${esc(p.name)}">
+    <div class="row between"><span class="eyebrow">Partner record</span><button class="btn ghost sm" data-act="close-profile">Close</button></div>
+    <div><h1 style="font-size:22px">${esc(p.name)} <span class="cc">${p.cc}</span></h1><div class="muted">${p.type} · ${esc(p.poc)} · owned by ${p.sec} section</div></div>
+    ${p.mergedFrom ? `<div class="notice" style="background:var(--ok-soft);color:var(--ok)">Merged from ${p.mergedFrom.map(esc).join(', ')}</div>` : ''}
+    <div class="facts"><div><span>Stage</span><b>${t(p.stage)}</b></div><div><span>Tier</span><b>${p.tier}</b></div>
+      <div><span>Last contact</span><b style="color:${atRisk(p) ? 'var(--risk)' : 'inherit'}">${ago(p.last)}</b></div><div><span>Room nights / yr</span><b class="num">${fNum(p.rn)}</b></div></div>
+    <div><h2 style="margin-bottom:6px">Open follow-ups</h2>${open.map(x => `<div class="row between small" style="padding:4px 0"><span>${esc(x.title)}</span><span class="muted">${dueTxt(x)}</span></div>`).join('') || '<div class="small muted">None</div>'}</div>
+    <div><h2 style="margin-bottom:4px">History across IO sections</h2><div class="small muted" style="margin-bottom:8px">Every call, meeting and event from every section, in one timeline (FR-C4)</div>
+      <ul class="tl">${p.history.map(h => `<li><span class="muted num">${ago(-h.d)}</span><span class="sec"><span class="chip ${h.sec === 'Europe' ? 'accent' : 'info'}">${h.sec}</span></span><span>${esc(h.text)}</span></li>`).join('') || '<li><span></span><span></span><span class="muted">No activity yet</span></li>'}</ul></div>
+  </aside>`;
+}
+
+function screenPipeline() {
+  const ps = visible();
+  return `<div class="head"><div class="grow"><h1>${t('Pipeline')}</h1><div class="muted">From first contact to an active Sales Incentive agreement (FR-A2)</div></div>
+      <button class="btn primary" data-act="quick">+ New lead</button></div>
+    ${S.quickLead ? `<form class="card pad" data-form="lead" style="display:grid;gap:10px;max-width:560px">
+      <h2>Quick create</h2><div class="small muted">The 20-second version for a phone at a trade stand. Everything else can wait.</div>
+      <label class="f">Company<input id="lead-name" name="name" required placeholder="e.g. Rheinland Reisen"></label>
+      <div class="row"><label class="f" style="flex:1">Country<input id="lead-cc" name="cc" maxlength="2" placeholder="DE"></label><label class="f" style="flex:2">Contact person<input id="lead-poc" name="poc" placeholder="Name"></label></div>
+      <div class="row"><button class="btn primary" type="submit">Add as Prospect</button><button class="btn ghost" type="button" data-act="quick">Cancel</button></div></form>` : ''}
+    <div class="board" ${spot('board')}>${STAGES.map((s, i) => { const list = ps.filter(p => p.stage === s).sort((a, b) => b.last - a.last);
+      return `<div class="col"><h3><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${STAGE_COLORS[i]};margin-inline-end:6px"></span>${t(s)}</span><span class="muted num">${list.length}</span></h3>
+        ${list.map(p => `<div class="pcard ${atRisk(p) ? 'risk' : ''}"><div class="name">${esc(p.name)}</div>
+          <div class="row between small muted"><span><span class="cc">${p.cc}</span> ${p.type}</span><span>${p.tier}</span></div>
+          <div class="row between">${lastChip(p)}${i < 4 ? `<button class="btn ghost sm" data-act="move" data-id="${p.id}">Move to ${t(STAGES[i + 1])} →</button>` : ''}</div></div>`).join('')}</div>`; }).join('')}</div>`;
+}
+
+function screenEvents() {
+  const evs = S.events.filter(e => S.role !== 'layla' || e.sec === 'Europe').sort((a, b) => a.start - b.start);
+  const e = S.events.find(x => x.id === S.eventId) || evs[0];
+  const meets = S.tasks.filter(x => x.ev === e.id).sort((a, b) => a.due - b.due);
+  const logged = e.meetings ?? meets.filter(m => m.done).length;
+  const fus = e.meetings ? e.meetings : S.tasks.filter(x => x.fromEv === e.id).length;
+  const rows = [['Invited', e.invited, 'var(--sunk)'], ['Confirmed', e.confirmed, '#6f9fd3'], ['Attended / checked in', e.checkedIn, '#d9a541'], ['Meetings logged', logged, '#c9785b'], ['Follow-ups created', fus, '#2c7a4c']];
+  return `<div class="head"><div class="grow"><h1>${t('Events')}</h1><div class="muted">Roadshows, FAM trips and exhibitions, from invitation to measurable return (FR-C1 to C4)</div></div></div>
+    <div class="grid2" style="grid-template-columns:minmax(0,1fr) minmax(0,1.6fr)">
+      <section class="card list">${evs.map(x => `<button class="item" style="width:100%;border:0;background:${x.id === e.id ? 'var(--accent-soft)' : 'transparent'};text-align:start" data-act="event" data-id="${x.id}">
+        <div class="body"><div class="title">${esc(x.name)}</div><div class="small muted">${x.type} · ${esc(x.city)} · ${fDay(x.start)}${S.role !== 'layla' ? ' · ' + x.sec : ''}</div></div>
+        <span class="chip ${x.status === 'Live' ? 'mark' : x.status === 'Completed' ? 'ok' : 'info'}">${x.status}</span></button>`).join('')}</section>
+      <section style="display:grid;gap:16px">
+        <div class="card pad" style="display:grid;gap:12px">
+          <div class="row between wrap"><div><h2>${esc(e.name)}</h2><div class="small muted">${e.type} · ${esc(e.city)} · ${fDay(e.start)}</div></div><span class="chip ${e.status === 'Live' ? 'mark' : e.status === 'Completed' ? 'ok' : 'info'}">${e.status}</span></div>
+          <div class="funnel">${rows.map(([l, v, c]) => `<div class="f"><span class="muted">${l}</span><div class="bar"><i style="width:${Math.max(v / e.invited * 100, v ? 2 : 0)}%;background:${c}"></i></div><b class="num" style="text-align:end">${v}</b></div>`).join('')}</div>
+          ${e.status === 'Completed' ? `<div class="kpis" style="margin-top:4px">
+            <div class="kpi card"><span class="small muted">Follow-ups completed</span><b>${e.fuDone}/${e.meetings}</b></div>
+            <div class="kpi card"><span class="small muted">Partners moved a stage</span><b>${e.progressed}</b></div>
+            <div class="kpi card"><span class="small muted">New leads</span><b>${e.leads}</b></div></div>` : ''}
+        </div>
+        ${meets.length ? `<div class="card" ${spot('meetings')}><div class="pad row between wrap" style="padding-bottom:6px"><h2>Meetings at the stand</h2><span class="small muted">Tap a meeting to log it, as you would on your phone</span></div>
+          <div class="list">${meets.map(m => { const p = partner(m.pid); return `<div class="item"><span class="num" style="font-weight:600;width:48px">${fTime(m.due)}</span>
+            <div class="body">${pname(p)}<div class="small muted">${esc(m.title)}</div>${m.outcome ? `<div class="small" style="margin-top:2px">Outcome: <b>${m.outcome}</b></div>` : ''}</div>
+            ${m.done ? `<span class="chip ${m.pending ? 'warn' : 'ok'}">${m.pending ? 'Waiting to sync' : 'Logged'}</span>` : `<button class="btn primary sm" data-act="capture" data-id="${m.id}">Log meeting</button>`}</div>`; }).join('')}</div>
+          ${pending() ? `<div class="pad row between" style="border-top:1px solid var(--line)"><span class="small">${pending()} item(s) saved offline, waiting to sync</span>${S.online ? '<button class="btn sm" data-act="sync">Sync now</button>' : '<button class="btn sm" data-act="online">Reconnect to the internet</button>'}</div>` : ''}</div>` : ''}
+      </section></div>`;
+}
+function captureSheet() {
+  const c = S.capture; if (!c) return '';
+  const m = S.tasks.find(x => x.id === c.tid), p = partner(m.pid), ev = S.events.find(e => e.id === m.ev);
+  return `<div class="overlay" data-act="close-capture"></div><div class="phone" role="dialog" aria-label="Log meeting">
+    <div class="ph-top"><div class="row between"><span class="small" style="font-weight:600;letter-spacing:.06em">● LIVE · ${esc(ev.name.toUpperCase())}</span>
+      <button class="btn sm" style="background:rgba(255,255,255,.18);border:0;color:inherit" data-act="online">${S.online ? 'Online' : 'Offline'}</button></div>
+      <div style="font-size:18px;font-weight:600;margin-top:8px">${esc(p.name)}</div><div class="small" style="opacity:.85">${fTime(m.due)} · ${esc(m.place)}</div></div>
+    <div class="ph-body">
+      ${atRisk(p) ? `<div class="notice mark">Heads-up: ${p.last} days since anyone in IO spoke to them.</div>` : ''}
+      <div><div class="small muted" style="margin-bottom:6px">How did it go?</div><div class="opts">${['Positive', 'Neutral', 'Not interested'].map(o => `<button data-act="outcome" data-v="${o}" class="${c.outcome === o ? 'on' : ''}">${o}</button>`).join('')}</div></div>
+      <label class="f">Next action<select id="cap-next" data-bind="next">${['Send proposal', 'Send product deck', 'Invite to FAM trip', 'Schedule a follow-up call', 'No follow-up needed'].map(o => `<option ${c.next === o ? 'selected' : ''}>${o}</option>`).join('')}</select></label>
+      <label class="f">Notes<textarea id="cap-notes" data-bind="notes" placeholder="Interest, volumes, who else to involve">${esc(c.notes)}</textarea></label>
+      <div class="small muted">Saving creates the follow-up task for you, due in 3 days. ${S.online ? '' : 'You are offline: it is stored on the phone and syncs when you reconnect (NFR 8).'}</div>
+      <div class="row"><button class="btn primary" style="flex:1;padding:11px" data-act="save-capture" ${c.outcome ? '' : 'disabled'}>Save</button><button class="btn" style="padding:11px" data-act="close-capture">Cancel</button></div>
+    </div></div>`;
+}
+
+function screenCampaigns() {
+  const ps = visible(), aud = segAudience();
+  const opts = (key, vals) => `<div class="toggles">${vals.map(v => `<button data-act="seg" data-k="${key}" data-v="${esc(v)}" class="${S.seg[key].includes(v) ? 'on' : ''}">${esc(v)}</button>`).join('')}</div>`;
+  return `<div class="head"><div class="grow"><h1>${t('Campaigns')}</h1><div class="muted">Segmented B2B newsletters and co-marketing with measurable results (FR-B1 to B3)</div></div></div>
+    <div class="notice mark"><span>ℹ</span><span>IO already sends newsletters from an existing tool. The BRD's first step is to connect to it, not replace it (Open item 8). Engagement figures below are sample data.</span></div>
+    <div class="grid2">
+      <section class="card pad" style="display:grid;gap:14px" ${spot('segment')}>
+        <div class="row between"><h2>Build an audience</h2><span class="chip accent num">${aud.length} partners · ${aud.length * 3} contacts</span></div>
+        <div><div class="eyebrow" style="margin-bottom:6px">Market</div>${opts('cc', [...new Set(ps.map(p => p.cc))].sort())}</div>
+        <div><div class="eyebrow" style="margin-bottom:6px">Partner type</div>${opts('type', [...new Set(ps.map(p => p.type))].sort())}</div>
+        <div><div class="eyebrow" style="margin-bottom:6px">Tier</div>${opts('tier', ['Gold', 'Silver', 'Bronze'])}</div>
+        <div class="small muted">${aud.map(p => esc(p.name)).join(', ') || 'No partners match. Remove a filter.'}</div>
+        <div class="row"><button class="btn primary" data-act="save-seg" ${aud.length ? '' : 'disabled'}>${S.segSaved ? 'Segment saved ✓' : 'Save segment for the next newsletter'}</button></div>
+      </section>
+      <section class="card pad" style="display:grid;gap:12px">
+        <h2>Last B2B newsletter</h2><div class="small muted">Europe trade update · sent ${fDay(at(-9))} · 412 recipients</div>
+        <div class="kpis"><div class="kpi card"><span class="small muted">Opened</span><b>46%</b></div><div class="kpi card"><span class="small muted">Clicked</span><b>9%</b></div></div>
+        <div class="small muted">Top link: Winter FAM trip application (31 clicks)</div>
+      </section>
+    </div>
+    <section class="card table-wrap"><div class="pad" style="padding-bottom:4px"><h2>Co-marketing with partners</h2></div><table>
+      <thead><tr><th>Campaign</th><th>Partner</th><th>Channel</th><th>Reach</th><th>Click-throughs</th><th>Leads</th></tr></thead>
+      <tbody>${S.campaigns.filter(c => visibleIds().has(c.pid)).map(c => `<tr><td class="title">${esc(c.name)}</td><td>${esc(partner(c.pid).name)}</td><td class="muted">${esc(c.channel)}</td><td class="num">${fNum(c.reach)}</td><td class="num">${fNum(c.clicks)}</td><td class="num">${c.leads}</td></tr>`).join('')}</tbody></table></section>`;
+}
+
+function screenReport() {
+  const secs = S.role === 'layla' ? ['Europe'] : SECTIONS;
+  const rows = secs.map(sec => {
+    const ps = S.partners.filter(p => p.sec === sec), evs = S.events.filter(e => e.sec === sec);
+    const meet = evs.reduce((a, e) => a + (e.meetings ?? S.tasks.filter(x => x.ev === e.id && x.done).length), 0);
+    const fu = S.tasks.filter(x => ps.some(p => p.id === x.pid) && x.auto);
+    return { sec, n: ps.length, active: ps.filter(p => p.stage === 'Active').length, pipe: ps.filter(p => p.stage !== 'Active').length, risk: ps.filter(atRisk).length, ev: evs.length, meet, fuRate: fu.length ? Math.round(fu.filter(x => x.done).length / fu.length * 100) : 0, ps };
+  });
+  const tot = k => rows.reduce((a, r) => a + r[k], 0);
+  return `<div class="head"><div class="grow"><span class="eyebrow">Monthly HQ pack · generated automatically</span><h1>${NOW.toLocaleDateString(loc(), { month: 'long', year: 'numeric' })} · International Operations</h1>
+      <div class="muted">Built from live CRM data at ${fTime(NOW)} today. No spreadsheets were copied and no slides were assembled.</div></div></div>
+    ${S.role === 'layla' ? `<div class="notice" ${spot('rolesel-hint')}><span>🔒</span><span>As a section lead you see the Europe page of this report. Switch <b>Viewing as</b> (top bar) to IO Leadership to see every market.</span></div>` : ''}
+    <div class="kpis">
+      <div class="kpi card"><span class="small muted">Partner records</span><b>${tot('n')}</b></div>
+      <div class="kpi card"><span class="small muted">Active partners</span><b>${tot('active')}</b></div>
+      <div class="kpi card"><span class="small muted">In pipeline</span><b>${tot('pipe')}</b></div>
+      <div class="kpi card risk"><span class="small muted">At risk (90+ days)</span><b>${tot('risk')}</b></div>
+      <div class="kpi card"><span class="small muted">Event meetings logged</span><b>${tot('meet')}</b></div>
+    </div>
+    <section class="card table-wrap"><div class="pad" style="padding-bottom:4px"><h2>By section</h2></div><table>
+      <thead><tr><th>Section</th><th>Partners</th><th>Active</th><th>Pipeline by stage</th><th>At risk</th><th>Events</th><th>Meetings</th><th>Auto follow-ups done</th></tr></thead>
+      <tbody>${rows.map(r => `<tr><td class="title">${r.sec}</td><td class="num">${r.n}</td><td class="num">${r.active}</td>
+        <td style="min-width:160px"><div class="bar">${STAGES.map((s, i) => `<i title="${s}" style="width:${r.ps.filter(p => p.stage === s).length / r.n * 100}%;background:${STAGE_COLORS[i]}"></i>`).join('')}</div></td>
+        <td>${r.risk ? `<span class="chip risk">${r.risk}</span>` : '<span class="muted">0</span>'}</td><td class="num">${r.ev}</td><td class="num">${r.meet}</td><td class="num">${r.fuRate}%</td></tr>`).join('')}</tbody></table>
+      <div class="pad small muted row wrap" style="gap:12px">${STAGES.map((s, i) => `<span class="row" style="gap:5px"><i style="width:10px;height:10px;border-radius:2px;background:${STAGE_COLORS[i]};display:inline-block"></i>${s}</span>`).join('')}</div></section>`;
+}
+
+/* ============================================================
+   Guided tour: BRD pain → CRM value → try it
+   ============================================================ */
+const STEPS = [
+  { title: 'Why IO needs one CRM', ref: 'BRD §3 Current state',
+    pain: 'GCC, Europe, APAC and UK & US each keep their own Excel file. Updates between markets travel by email and WhatsApp. Event meetings and follow-ups are not captured anywhere, so leads get lost.',
+    gain: 'One Dynamics 365 system for partners, pipeline, events, campaigns and reporting. This demo follows Layla, a Europe section lead, through one working day with sample data.',
+    task: 'Press Next to start. Each step shows a problem from the BRD, then lets you fix it yourself.' },
+  { key: 'merge', screen: 'partners', target: 'dupes', title: 'One record per partner', ref: 'FR-A1 · NFR 9',
+    pain: 'Skyline Charter Air sits in three section spreadsheets under three spellings. Europe thinks the airline has gone quiet for 128 days.',
+    gain: 'Migration matches duplicates and merges them into one record that every market works from.',
+    task: 'On Partners, press "Merge into one record".' },
+  { key: 'history', screen: 'partners', target: 'p10row', title: 'See every section’s contact', ref: 'FR-C4',
+    pain: 'To find out whether another section has spoken to a partner, you have to ask around.',
+    gain: 'One timeline shows calls, meetings and events from every IO section. Skyline is no longer at risk: GCC spoke to them 40 days ago.',
+    task: 'Open Skyline Charter Air from the partner list.' },
+  { key: 'stage', screen: 'pipeline', target: 'board', title: 'A pipeline everyone can see', ref: 'FR-A2 · FR-A4',
+    pain: 'Pipeline status lives in each person’s tracker. Nobody can see what is close to an SI agreement.',
+    gain: 'Every partner sits on one board from Prospect to Active. Leads can be added from a phone in seconds.',
+    task: 'Move a partner to the next stage, or add a new lead.' },
+  { key: 'followup', screen: 'today', target: 'overdue', title: 'Follow-ups that create themselves', ref: 'FR-A3 · FR-A4',
+    pain: 'Follow-ups depend on memory. Partners drift for months without anyone noticing.',
+    gain: 'Rules create follow-ups automatically, such as the 90-day re-engagement rule, and escalate them if they are missed.',
+    task: 'On Today, tick off one of the automatically created follow-ups.' },
+  { key: 'capture', screen: 'events', target: 'meetings', title: 'An event, start to finish', ref: 'FR-C1 to C3 · NFR 8',
+    pain: 'At roadshows and exhibitions, meeting notes go on paper or in WhatsApp. After the event, nobody can say what it achieved.',
+    gain: 'Invitations, attendance, meeting outcomes and follow-ups are tracked for each event. Logging works on a phone, even with no signal at the venue.',
+    task: 'Log a meeting at Munich Travel Trade Day. Try it in Offline mode, then sync.' },
+  { key: 'segment', screen: 'campaigns', target: 'segment', title: 'Campaigns aimed at the right partners', ref: 'FR-B1 to B3',
+    pain: 'B2B emails go out to Outlook distribution lists, with no segments and no idea who engaged.',
+    gain: 'Audiences come straight from partner data (market, type, tier), and engagement plus co-marketing results are visible.',
+    task: 'Change the filters, then save the segment.' },
+  { key: 'report', screen: 'report', target: 'rolesel', title: 'The HQ report builds itself', ref: 'FR-D1 · FR-D2 · NFR 10',
+    pain: 'Every month someone copies numbers from section spreadsheets into Excel and PowerPoint for HQ.',
+    gain: 'The monthly pack is generated from live data. Section leads see their own market; leadership sees all of them.',
+    task: 'Switch "Viewing as" to IO Leadership.' },
+  { title: 'What this demo showed', ref: 'BRD §2.3 Success criteria', end: true },
+];
+const KEYS = STEPS.filter(s => s.key).map(s => s.key);
+const PROOF = [
+  ['merge', 'Partner records consolidated and de-duplicated across sections'],
+  ['history', 'One shared history for every partner across IO'],
+  ['stage', 'Pipeline stages visible to the whole section'],
+  ['followup', 'Follow-ups created and tracked automatically'],
+  ['capture', 'An event cycle run end to end: invitation → attendance → meeting log → follow-up'],
+  ['segment', 'Segmented, trackable B2B campaigns'],
+  ['report', 'Monthly HQ report with zero manual Excel or PowerPoint work'],
+];
+
+function tour() {
+  const st = STEPS[S.step], doneN = KEYS.filter(k => S.done[k]).length;
+  return `<aside class="tour" aria-label="${t('Guided tour')}">
+    <div class="tour-head"><div class="row between"><span class="eyebrow">${t('Guided tour')} · step ${S.step + 1} of ${STEPS.length}</span><button class="btn ghost sm" data-act="tour-close">Hide</button></div>
+      <div class="dots">${STEPS.map((s, i) => `<button aria-label="Step ${i + 1}" data-act="step" data-v="${i}" class="${s.key && S.done[s.key] ? 'ok' : i < S.step ? 'seen' : ''} ${i === S.step ? 'cur' : ''}"></button>`).join('')}</div>
+      <div class="small muted">${doneN} of ${KEYS.length} benefits shown</div></div>
+    <div class="tour-body">
+      <div class="ref">${st.ref}</div><h2>${st.title}</h2>
+      ${st.end ? `<ul class="proof">${PROOF.map(([k, l]) => `<li><span class="tick ${S.done[k] ? 'on' : ''}">${S.done[k] ? '✓' : ''}</span><span>${l}</span></li>`).join('')}</ul>
+        <div class="gain"><b>Suggested next step</b><span>Run the full event cycle in D365 for one pilot market (Europe), as the BRD success criteria require before full rollout.</span></div>
+        <button class="btn" data-act="restart">Restart the demo</button>` : `
+        <div class="pain"><b>Today</b><span>${st.pain}</span></div>
+        <div class="gain"><b>With IO CRM</b><span>${st.gain}</span></div>
+        <div class="task ${st.key && S.done[st.key] ? 'ok' : ''}"><span>${st.key && S.done[st.key] ? '✓ Done. ' : ''}${st.task}</span>
+          ${st.screen ? `<div><button class="btn sm" data-act="show">Show me</button></div>` : ''}</div>`}
+    </div>
+    <div class="tour-foot"><button class="btn" data-act="prev" ${S.step === 0 ? 'disabled' : ''}>Back</button><button class="btn primary" data-act="nextstep" ${S.step === STEPS.length - 1 ? 'disabled' : ''}>Next</button></div>
+  </aside>`;
+}
+
+/* ============================================================
+   Shell + render
+   ============================================================ */
+const NAV = [['today', 'Today'], ['partners', 'Partners'], ['pipeline', 'Pipeline'], ['events', 'Events'], ['campaigns', 'Campaigns'], ['report', 'HQ report']];
+const SCREENS = { today: screenToday, partners: screenPartners, pipeline: screenPipeline, events: screenEvents, campaigns: screenCampaigns, report: screenReport };
+
+function render() {
+  document.documentElement.lang = S.lang; document.documentElement.dir = S.lang === 'ar' ? 'rtl' : 'ltr';
+  const main = document.querySelector('main'); const y = main ? main.scrollTop : 0;
+  const od = overdue().length;
+  document.getElementById('app').innerHTML = `<div class="shell ${S.tourOpen ? '' : 'tour-closed'}">
+    <nav class="rail"><div class="logo"><b>IO CRM</b><span>DCT International Operations</span></div>
+      ${NAV.map(([k, l]) => `<button class="${S.screen === k ? 'on' : ''}" data-act="go" data-v="${k}" title="${t(l)}">${icon(k)}<span class="lbl">${t(l)}</span>${k === 'today' && od ? `<span class="badge">${od}</span>` : ''}</button>`).join('')}
+      <div class="foot">Prototype · sample data<br>Nothing is saved</div></nav>
+    <main><div class="topbar">
+        <span class="chip mark">Sample data</span><span class="grow"></span>
+        <label class="viewas small" ${spot('rolesel')}><span class="muted">${t('Viewing as')}</span>
+          <select id="role" data-act-change="role"><option value="layla" ${S.role === 'layla' ? 'selected' : ''}>Layla Al Mazrouei · Europe section lead</option><option value="lead" ${S.role === 'lead' ? 'selected' : ''}>IO Leadership · all sections</option></select></label>
+        <div class="seg" role="group" aria-label="Language"><button data-act="lang" data-v="en" class="${S.lang === 'en' ? 'on' : ''}">EN</button><button data-act="lang" data-v="ar" class="${S.lang === 'ar' ? 'on' : ''}">عربي</button></div>
+      </div>
+      <div class="screen">${SCREENS[S.screen]()}</div></main>
+    ${S.tourOpen ? tour() : ''}
+  </div>
+  ${S.tourOpen ? '' : `<button class="btn primary tour-fab" data-act="tour-open">${t('Guided tour')} · ${S.step + 1}/${STEPS.length}</button>`}
+  ${profileDrawer()}${captureSheet()}
+  ${S.toast ? `<div class="toast" role="status">${esc(S.toast)}</div>` : ''}`;
+  const m2 = document.querySelector('main'); if (m2) m2.scrollTop = y;
+  if (S.spot) { const el = document.querySelector(`[data-spot="${S.spot}"]`); if (el) { el.classList.add('spot'); el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } }
+}
+let tt, st;
+function toast(msg) { S.toast = msg; clearTimeout(tt); tt = setTimeout(() => { S.toast = null; render(); }, 2600); }
+function spotlight(k) { S.spot = k; clearTimeout(st); st = setTimeout(() => { S.spot = null; }, 2800); }
+function advanceIfDone(key) {
+  const cur = STEPS[S.step];
+  if (cur.key === key) toast(toastFor(key) + ' Press Next in the tour to continue.');
+  else toast(toastFor(key));
+}
+const toastFor = k => ({ merge: '3 records merged into one.', history: 'Full cross-section history shown.', stage: 'Pipeline updated for the whole section.',
+  followup: 'Follow-up logged against the partner.', capture: S.online ? 'Meeting saved. Follow-up created automatically.' : 'Saved on the phone. It will sync when you reconnect.',
+  segment: 'Segment saved for the next newsletter.', report: 'Now showing every section.' }[k]);
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const a = el.dataset.act, id = el.dataset.id, v = el.dataset.v;
+  const before = { ...S.done };
+  switch (a) {
+    case 'go': S.screen = v; S.profileId = null; document.querySelector('main')?.scrollTo(0, 0); break;
+    case 'lang': S.lang = v; break;
+    case 'task': completeTask(id); break;
+    case 'merge': mergeDupes(); break;
+    case 'profile': S.profileId = id; if (id === 'p10' && S.merged) S.done.history = true; break;
+    case 'close-profile': S.profileId = null; break;
+    case 'move': moveStage(id); break;
+    case 'quick': S.quickLead = !S.quickLead; break;
+    case 'event': S.eventId = id; break;
+    case 'capture': S.capture = { tid: id, outcome: null, next: 'Schedule a follow-up call', notes: '' }; break;
+    case 'close-capture': S.capture = null; break;
+    case 'outcome': S.capture.outcome = v; break;
+    case 'online': S.online = !S.online; break;
+    case 'save-capture': captureMeeting(S.capture.tid, S.capture); S.capture = null; break;
+    case 'sync': S.tasks.forEach(x => x.pending = false); toast('Synced. Everyone in the section can see it now.'); break;
+    case 'seg': { const arr = S.seg[el.dataset.k]; const i = arr.indexOf(v); i < 0 ? arr.push(v) : arr.splice(i, 1); S.segSaved = false; break; }
+    case 'save-seg': S.segSaved = true; S.done.segment = true; break;
+    case 'tour-close': S.tourOpen = false; break;
+    case 'tour-open': S.tourOpen = true; break;
+    case 'step': S.step = +v; break;
+    case 'prev': S.step = Math.max(0, S.step - 1); goStep(); break;
+    case 'nextstep': S.step = Math.min(STEPS.length - 1, S.step + 1); goStep(); break;
+    case 'show': goStep(true); break;
+    case 'restart': location.reload(); return;
+    default: return;
+  }
+  const newly = Object.keys(S.done).find(k => S.done[k] && !before[k]);
+  if (newly) advanceIfDone(newly);
+  render();
+});
+function goStep(force) {
+  const s = STEPS[S.step]; if (!s.screen) return;
+  if (force || S.screen !== s.screen) { S.screen = s.screen; S.profileId = null; S.capture = null; }
+  if (s.key === 'report' && S.role === 'layla') spotlight('rolesel'); else spotlight(s.target);
+  if (window.matchMedia('(max-width:1100px)').matches && force) S.tourOpen = false;
+}
+document.addEventListener('change', e => {
+  if (e.target.id === 'role') { S.role = e.target.value; if (S.role === 'lead' && !S.done.report) { S.done.report = true; S.screen = 'report'; advanceIfDone('report'); } render(); }
+  if (e.target.dataset.bind && S.capture) S.capture[e.target.dataset.bind] = e.target.value;
+});
+document.addEventListener('input', e => { if (e.target.dataset.bind && S.capture) S.capture[e.target.dataset.bind] = e.target.value; });
+document.addEventListener('submit', e => {
+  const f = e.target.closest('form[data-form="lead"]'); if (!f) return; e.preventDefault();
+  const d = Object.fromEntries(new FormData(f)); const was = S.done.stage; addLead(d); S.quickLead = false;
+  toast(`${d.name} added as a Prospect. An intro call was scheduled automatically.`); if (!was) setTimeout(() => toast('Pipeline updated. Press Next in the tour to continue.'), 2700);
+  render();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && (S.profileId || S.capture)) { S.profileId = null; S.capture = null; render(); } });
+if (window.matchMedia('(max-width:1100px)').matches) S.tourOpen = true;
+render();
+</script>
