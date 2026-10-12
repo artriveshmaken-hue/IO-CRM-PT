@@ -99,6 +99,7 @@ main{overflow:auto;min-width:0}
 .row{display:flex;align-items:center;gap:10px}
 .between{justify-content:space-between}
 .wrap{flex-wrap:wrap}
+.grid2>*{min-width:0}
 .grid2{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:20px;align-items:start}
 .list>*+*{border-top:1px solid var(--line)}
 .item{display:flex;gap:12px;padding:12px 16px;align-items:flex-start}
@@ -243,7 +244,37 @@ const S = {
   role: 'layla', lang: 'en', screen: 'today', step: 0, tourOpen: true, spot: null, toast: null,
   merged: false, profileId: null, eventId: 'e4', capture: null, online: true, quickLead: false,
   seg: { cc: ['DE', 'AT', 'CH'], type: [], tier: ['Gold', 'Silver'] }, segSaved: false,
-  done: { merge: false, history: false, stage: false, followup: false, capture: false, segment: false, report: false },
+  done: { merge: false, history: false, stage: false, followup: false, capture: false, lead: false, stakeholder: false, segment: false, report: false },
+  lead: null, stakeId: null, stakeCat: 'All',
+  // FR-C1: Abu Dhabi destination stakeholders, profiled separately from trade partners. Fictional.
+  stakeholders: [
+    { id: 's1', name: 'Corniche Grand Hotel', cat: 'Hotel', offer: '5-star city hotel, 320 rooms, ballroom', tier: 'Strategic', poc: 'Reem Al Hosani', interests: ['Luxury', 'MICE'], history: [H(-12, 'Europe', 'Paris Roadshow: co-exhibited, 8 trade meetings')] },
+    { id: 's2', name: 'Saadiyat Shores Resort', cat: 'Hotel', offer: 'Beach resort for families and luxury travellers', tier: 'Strategic', poc: 'Daniel Costa', interests: ['Luxury', 'Family'], history: [H(-12, 'Europe', 'Paris Roadshow: co-exhibited, 6 trade meetings')] },
+    { id: 's3', name: 'Al Qasr Desert Camp', cat: 'Experience', offer: 'Desert stays, dune safaris, falconry', tier: 'Core', poc: 'Hamad Al Ketbi', interests: ['Adventure', 'Luxury'], history: [] },
+    { id: 's4', name: 'Falcon Heritage Tours', cat: 'DMC', offer: 'Ground handling, cultural and city tours', tier: 'Core', poc: 'Sara Al Nuaimi', interests: ['Culture', 'Family', 'MICE'], history: [H(-12, 'Europe', 'Paris Roadshow: presented ground services')] },
+    { id: 's5', name: 'Island Theme Parks Co.', cat: 'Attraction', offer: 'Three theme parks and a water park', tier: 'Strategic', poc: 'Mark Ellis', interests: ['Family', 'Adventure'], history: [H(-1, 'Europe', 'Declined Munich Travel Trade Day: peak-season staffing')] },
+    { id: 's6', name: 'Gulf Horizon Airways', cat: 'Airline', offer: 'Direct flights to 12 European cities', tier: 'Strategic', poc: 'Lina Haddad', interests: ['Luxury', 'Family', 'MICE', 'Culture'], history: [H(-12, 'Europe', 'Paris Roadshow: co-exhibited, 11 trade meetings')] },
+    { id: 's7', name: 'Mangrove Kayak Adventures', cat: 'Experience', offer: 'Eco tours and kayaking', tier: 'Emerging', poc: 'Omar Al Dhaheri', interests: ['Adventure', 'Family'], history: [] },
+    { id: 's8', name: 'Heritage Museum District', cat: 'Cultural venue', offer: 'Museums, galleries, guided heritage walks', tier: 'Strategic', poc: 'Aisha Al Mansoori', interests: ['Culture'], history: [H(-20, 'APAC', 'Tokyo Sales Mission: presented, 7 trade meetings')] },
+  ],
+  // Who took part in which trade promotion activity, in what role, and what they got out of it.
+  parts: [
+    { eid: 'e1', sid: 's1', role: 'Co-exhibitor', status: 'Confirmed', meetings: 8, leads: 3 },
+    { eid: 'e1', sid: 's2', role: 'Co-exhibitor', status: 'Confirmed', meetings: 6, leads: 2 },
+    { eid: 'e1', sid: 's4', role: 'Presenter', status: 'Confirmed', meetings: 5, leads: 1 },
+    { eid: 'e1', sid: 's6', role: 'Co-exhibitor', status: 'Confirmed', meetings: 11, leads: 4 },
+    { eid: 'e4', sid: 's1', role: 'Co-exhibitor', status: 'Confirmed', meetings: 2, leads: 0 },
+    { eid: 'e4', sid: 's3', role: 'Co-exhibitor', status: 'Confirmed', meetings: 1, leads: 0 },
+    { eid: 'e4', sid: 's6', role: 'Co-exhibitor', status: 'Confirmed', meetings: 3, leads: 1 },
+    { eid: 'e4', sid: 's5', role: 'Co-exhibitor', status: 'Declined', meetings: 0, leads: 0 },
+    { eid: 'e2', sid: 's2', role: 'FAM host · 2 nights', status: 'Confirmed', meetings: 0, leads: 0 },
+    { eid: 'e2', sid: 's3', role: 'FAM host · desert night', status: 'Confirmed', meetings: 0, leads: 0 },
+    { eid: 'e2', sid: 's4', role: 'Ground handler', status: 'Confirmed', meetings: 0, leads: 0 },
+    { eid: 'e2', sid: 's1', role: 'FAM host · 1 night', status: 'Invited', meetings: 0, leads: 0 },
+    { eid: 'e3', sid: 's5', role: 'Presenter', status: 'Confirmed', meetings: 0, leads: 0 },
+    { eid: 'e5', sid: 's8', role: 'Presenter', status: 'Confirmed', meetings: 7, leads: 2 },
+    { eid: 'e5', sid: 's6', role: 'Co-exhibitor', status: 'Confirmed', meetings: 9, leads: 3 },
+  ],
   partners: [
     P('p1', 'Europe', 'Alpenblick Reisen GmbH', 'DE', 'Tour operator', 'Gold', 'Active', 12, 'Katrin Vogel', 4200,
       [H(-12, 'Europe', 'Paris Roadshow: met at stand, interested in Q1 campaign'), H(-40, 'Europe', 'Co-marketing campaign closed: 2,140 click-throughs')]),
@@ -292,11 +323,11 @@ const S = {
     { id: 'x3', kind: 'Call', pid: 'a3', title: 'Qualify luxury programme interest', due: at(0, 9), auto: 'Engagement cadence' },
   ],
   events: [
-    { id: 'e4', name: 'Munich Travel Trade Day', type: 'Exhibition', city: 'Munich', sec: 'Europe', start: at(0), status: 'Live', invited: 35, confirmed: 22, declined: 4, checkedIn: 9 },
-    { id: 'e1', name: 'Paris Roadshow', type: 'Roadshow', city: 'Paris', sec: 'Europe', start: at(-12), status: 'Completed', invited: 42, confirmed: 31, declined: 6, checkedIn: 27, meetings: 19, fuDone: 11, progressed: 3, leads: 4 },
-    { id: 'e2', name: 'Winter FAM trip: luxury agents', type: 'FAM trip', city: 'Abu Dhabi', sec: 'Europe', start: at(9), status: 'Planned', invited: 14, confirmed: 7, declined: 2, checkedIn: 0 },
-    { id: 'e3', name: 'Riyadh B2B Workshop', type: 'Roadshow', city: 'Riyadh', sec: 'GCC', start: at(5), status: 'Planned', invited: 40, confirmed: 26, declined: 3, checkedIn: 0 },
-    { id: 'e5', name: 'Tokyo Sales Mission', type: 'Roadshow', city: 'Tokyo', sec: 'APAC', start: at(-20), status: 'Completed', invited: 30, confirmed: 24, declined: 2, checkedIn: 21, meetings: 15, fuDone: 15, progressed: 2, leads: 3 },
+    { id: 'e4', name: 'Munich Travel Trade Day', type: 'Exhibition', city: 'Munich', sec: 'Europe', theme: 'General', start: at(0), status: 'Live', invited: 35, confirmed: 22, declined: 4, checkedIn: 9 },
+    { id: 'e1', name: 'Paris Roadshow', type: 'Roadshow', city: 'Paris', sec: 'Europe', theme: 'General', start: at(-12), status: 'Completed', invited: 42, confirmed: 31, declined: 6, checkedIn: 27, meetings: 19, fuDone: 11, progressed: 3, leads: 4 },
+    { id: 'e2', name: 'Winter FAM trip: luxury agents', type: 'FAM trip', city: 'Abu Dhabi', sec: 'Europe', theme: 'Luxury', start: at(9), status: 'Planned', invited: 14, confirmed: 7, declined: 2, checkedIn: 0 },
+    { id: 'e3', name: 'Riyadh B2B Workshop', type: 'Roadshow', city: 'Riyadh', sec: 'GCC', theme: 'Family', start: at(5), status: 'Planned', invited: 40, confirmed: 26, declined: 3, checkedIn: 0 },
+    { id: 'e5', name: 'Tokyo Sales Mission', type: 'Roadshow', city: 'Tokyo', sec: 'APAC', theme: 'Culture', start: at(-20), status: 'Completed', invited: 30, confirmed: 24, declined: 2, checkedIn: 21, meetings: 15, fuDone: 15, progressed: 2, leads: 3 },
   ],
   campaigns: [
     { name: 'Winter in Abu Dhabi', pid: 'p1', channel: 'Partner newsletter + paid social', reach: 184000, clicks: 2140, leads: 37 },
@@ -340,10 +371,56 @@ function addLead({ name, cc, poc }) {
   S.tasks.push({ id: 'q' + id, kind: 'Call', pid: id, title: 'Intro call: qualify interest', due: at(2), allDay: true, done: false, auto: 'New lead cadence' });
   S.done.stage = true;
 }
-function captureMeeting(tid, { outcome, next, notes }) {
+const stake = id => S.stakeholders.find(s => s.id === id);
+const eventById = id => S.events.find(e => e.id === id);
+const partsOf = sid => S.parts.filter(x => x.sid === sid);
+const confirmedAt = eid => S.parts.filter(x => x.eid === eid && x.status === 'Confirmed').map(x => stake(x.sid));
+const INTERESTS = ['Luxury', 'Family', 'Culture', 'Adventure', 'MICE'];
+const SAMPLE_CARD = { name: 'Rheinland Reisen GmbH', poc: 'Lukas Brandt', email: 'l.brandt@rheinland-reisen.example', cc: 'DE', type: 'Tour operator' };
+// Suggested stakeholders for an activity or a lead: most overlapping interests first, those already taking part excluded.
+function suggestStakeholders(interests, excludeEid) {
+  const taken = new Set(S.parts.filter(x => x.eid === excludeEid).map(x => x.sid));
+  return S.stakeholders.filter(s => !taken.has(s.id))
+    .map(s => ({ s, score: s.interests.filter(i => interests.includes(i)).length }))
+    .filter(x => x.score > 0).sort((a, b) => b.score - a.score).map(x => x.s);
+}
+function inviteStakeholder(eid, sid) {
+  const ev = eventById(eid);
+  S.parts.push({ eid, sid, role: ev.type === 'FAM trip' ? 'FAM host' : 'Co-exhibitor', status: 'Invited', meetings: 0, leads: 0 });
+  stake(sid).history.unshift(H(0, 'Europe', `Invited to ${ev.name}`));
+  S.done.stakeholder = true;
+}
+function confirmPart(eid, sid) {
+  const pt = S.parts.find(x => x.eid === eid && x.sid === sid); pt.status = 'Confirmed';
+  stake(sid).history.unshift(H(0, 'Europe', `Confirmed for ${eventById(eid).name} as ${pt.role}`));
+  S.done.stakeholder = true;
+}
+function findDuplicate(name) {
+  const w = (name || '').trim().toLowerCase().split(/\s+/)[0] || '';
+  return w.length >= 4 ? S.partners.find(p => p.name.toLowerCase().split(/\s+/)[0] === w) : null;
+}
+// FR-A2 mobile lead capture: one lead = a Prospect partner tied to the activity, an intro call, and referrals to stakeholders.
+function saveLead(L) {
+  const ev = eventById(L.eid), id = 'n' + Date.now();
+  const p = P(id, 'Europe', L.name.trim(), (L.cc || 'DE').toUpperCase().slice(0, 2), L.type, 'Bronze', 'Prospect', 0, L.poc || '-', 0,
+    [H(0, 'Europe', `Lead captured on mobile at ${ev.name}${L.interests.length ? ' · interested in ' + L.interests.join(', ') : ''}`)]);
+  Object.assign(p, { eid: ev.id, source: ev.name, interests: [...L.interests], referred: [...L.refer], consent: L.consent, email: L.email, pending: !S.online });
+  S.partners.push(p);
+  S.tasks.push({ id: 'q' + id, kind: 'Call', pid: id, title: 'Intro call: qualify interest', due: at(2), allDay: true, done: false, auto: 'New lead from ' + ev.name, pending: !S.online });
+  L.refer.forEach(sid => {
+    let pt = S.parts.find(x => x.eid === ev.id && x.sid === sid);
+    if (!pt) { pt = { eid: ev.id, sid, role: 'Lead referral', status: 'Confirmed', meetings: 0, leads: 0 }; S.parts.push(pt); }
+    pt.leads++;
+    stake(sid).history.unshift(H(0, 'Europe', `Lead shared from ${ev.name}: ${p.name}`));
+  });
+  S.done.lead = true;
+  return p;
+}
+function captureMeeting(tid, { outcome, next, notes, joint }) {
   const t = S.tasks.find(x => x.id === tid), ev = S.events.find(e => e.id === t.ev);
   t.done = true; t.outcome = outcome; t.pending = !S.online; ev.checkedIn++;
-  touch(t.pid, `Met at ${ev.name} (${outcome.toLowerCase()})${notes ? ': ' + notes : ''}`);
+  touch(t.pid, `Met at ${ev.name} (${outcome.toLowerCase()})${joint ? ' with ' + stake(joint).name : ''}${notes ? ': ' + notes : ''}`);
+  if (joint) { const pt = S.parts.find(x => x.eid === ev.id && x.sid === joint); pt.meetings++; stake(joint).history.unshift(H(0, 'Europe', `Joint meeting with ${partner(t.pid).name} at ${ev.name}`)); }
   if (next !== 'No follow-up needed') S.tasks.push({ id: 'f' + Date.now(), kind: 'Follow-up', pid: t.pid, title: next, due: at(3), allDay: true, done: false, auto: 'After ' + ev.name, fromEv: ev.id, pending: !S.online });
   if (outcome === 'Positive') { const p = partner(t.pid); if (p.stage === 'Prospect') p.stage = 'Qualified'; }
   S.done.capture = true;
@@ -373,6 +450,7 @@ const spot = k => `data-spot="${k}"`;
 const ICONS = {
   today: '<path d="M4 6h16M4 12h10M4 18h7"/><circle cx="18" cy="16" r="3"/>',
   partners: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.5a3 3 0 0 1 0 6M18 14c2 .7 3 2.7 3 6"/>',
+  stakeholders: '<path d="M4 21V10l8-6 8 6v11"/><path d="M9 21v-6h6v6M4 21h16"/>',
   pipeline: '<rect x="3" y="4" width="4.5" height="16" rx="1"/><rect x="9.75" y="4" width="4.5" height="11" rx="1"/><rect x="16.5" y="4" width="4.5" height="6" rx="1"/>',
   events: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
   campaigns: '<path d="M4 10v4l11 5V5L4 10z"/><path d="M15 9.5a3 3 0 0 1 0 5M7 14l1.5 5"/>',
@@ -461,16 +539,12 @@ function profileDrawer() {
 function screenPipeline() {
   const ps = visible();
   return `<div class="head"><div class="grow"><h1>${t('Pipeline')}</h1><div class="muted">From first contact to an active Sales Incentive agreement (FR-A2)</div></div>
-      <button class="btn primary" data-act="quick">+ New lead</button></div>
-    ${S.quickLead ? `<form class="card pad" data-form="lead" style="display:grid;gap:10px;max-width:560px">
-      <h2>Quick create</h2><div class="small muted">The 20-second version for a phone at a trade stand. Everything else can wait.</div>
-      <label class="f">Company<input id="lead-name" name="name" required placeholder="e.g. Rheinland Reisen"></label>
-      <div class="row"><label class="f" style="flex:1">Country<input id="lead-cc" name="cc" maxlength="2" placeholder="DE"></label><label class="f" style="flex:2">Contact person<input id="lead-poc" name="poc" placeholder="Name"></label></div>
-      <div class="row"><button class="btn primary" type="submit">Add as Prospect</button><button class="btn ghost" type="button" data-act="quick">Cancel</button></div></form>` : ''}
+      <button class="btn primary" data-act="lead-open">+ Capture lead</button></div>
     <div class="board" ${spot('board')}>${STAGES.map((s, i) => { const list = ps.filter(p => p.stage === s).sort((a, b) => b.last - a.last);
       return `<div class="col"><h3><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${STAGE_COLORS[i]};margin-inline-end:6px"></span>${t(s)}</span><span class="muted num">${list.length}</span></h3>
         ${list.map(p => `<div class="pcard ${atRisk(p) ? 'risk' : ''}"><div class="name">${esc(p.name)}</div>
           <div class="row between small muted"><span><span class="cc">${p.cc}</span> ${p.type}</span><span>${p.tier}</span></div>
+          ${p.source ? `<div><span class="chip mark">📱 ${esc(p.source)}</span></div>` : ''}
           <div class="row between">${lastChip(p)}${i < 4 ? `<button class="btn ghost sm" data-act="move" data-id="${p.id}">Move to ${t(STAGES[i + 1])} →</button>` : ''}</div></div>`).join('')}</div>`; }).join('')}</div>`;
 }
 
@@ -486,7 +560,7 @@ function screenEvents() {
       <section class="card list">${evs.map(x => `<button class="item" style="width:100%;border:0;background:${x.id === e.id ? 'var(--accent-soft)' : 'transparent'};text-align:start" data-act="event" data-id="${x.id}">
         <div class="body"><div class="title">${esc(x.name)}</div><div class="small muted">${x.type} · ${esc(x.city)} · ${fDay(x.start)}${S.role !== 'layla' ? ' · ' + x.sec : ''}</div></div>
         <span class="chip ${x.status === 'Live' ? 'mark' : x.status === 'Completed' ? 'ok' : 'info'}">${x.status}</span></button>`).join('')}</section>
-      <section style="display:grid;gap:16px">
+      <section style="display:grid;gap:16px;grid-template-columns:minmax(0,1fr);min-width:0">
         <div class="card pad" style="display:grid;gap:12px">
           <div class="row between wrap"><div><h2>${esc(e.name)}</h2><div class="small muted">${e.type} · ${esc(e.city)} · ${fDay(e.start)}</div></div><span class="chip ${e.status === 'Live' ? 'mark' : e.status === 'Completed' ? 'ok' : 'info'}">${e.status}</span></div>
           <div class="funnel">${rows.map(([l, v, c]) => `<div class="f"><span class="muted">${l}</span><div class="bar"><i style="width:${Math.max(v / e.invited * 100, v ? 2 : 0)}%;background:${c}"></i></div><b class="num" style="text-align:end">${v}</b></div>`).join('')}</div>
@@ -499,8 +573,65 @@ function screenEvents() {
           <div class="list">${meets.map(m => { const p = partner(m.pid); return `<div class="item"><span class="num" style="font-weight:600;width:48px">${fTime(m.due)}</span>
             <div class="body">${pname(p)}<div class="small muted">${esc(m.title)}</div>${m.outcome ? `<div class="small" style="margin-top:2px">Outcome: <b>${m.outcome}</b></div>` : ''}</div>
             ${m.done ? `<span class="chip ${m.pending ? 'warn' : 'ok'}">${m.pending ? 'Waiting to sync' : 'Logged'}</span>` : `<button class="btn primary sm" data-act="capture" data-id="${m.id}">Log meeting</button>`}</div>`; }).join('')}</div>
-          ${pending() ? `<div class="pad row between" style="border-top:1px solid var(--line)"><span class="small">${pending()} item(s) saved offline, waiting to sync</span>${S.online ? '<button class="btn sm" data-act="sync">Sync now</button>' : '<button class="btn sm" data-act="online">Reconnect to the internet</button>'}</div>` : ''}</div>` : ''}
+          </div>` : ''}
+        ${eventStakeholders(e)}
+        ${e.status === 'Live' ? eventLeads(e) : ''}
+        ${pending() ? `<div class="card"><div class="pad row between"><span class="small">${pending()} item(s) saved offline, waiting to sync</span>${S.online ? '<button class="btn sm" data-act="sync">Sync now</button>' : '<button class="btn sm" data-act="online">Reconnect to the internet</button>'}</div></div>` : ''}
       </section></div>`;
+}
+function eventStakeholders(e) {
+  const parts = S.parts.filter(x => x.eid === e.id);
+  const sugg = e.status === 'Completed' ? [] : suggestStakeholders(e.theme === 'General' ? INTERESTS : [e.theme], e.id).slice(0, 3);
+  const st = s => s === 'Confirmed' ? 'ok' : s === 'Invited' ? 'info' : 'risk';
+  return `<div class="card" ${spot('stakeholders')}>
+    <div class="pad" style="padding-bottom:6px"><div class="row between wrap"><h2>Abu Dhabi stakeholders taking part</h2><span class="chip accent">${parts.filter(x => x.status === 'Confirmed').length} confirmed</span></div>
+      <div class="small muted">Hotels, attractions, DMCs and airlines promoting with us at this activity (FR-C1)</div></div>
+    <div class="table-wrap"><table><thead><tr><th>Stakeholder</th><th>Role</th><th>Status</th><th>Trade meetings</th><th>Leads shared</th><th></th></tr></thead>
+      <tbody>${parts.map(x => { const s = stake(x.sid); return `<tr><td><button class="btn ghost sm" style="padding-inline:0;font-weight:600;text-align:start" data-act="stake" data-id="${s.id}">${esc(s.name)}</button><div class="small muted">${s.cat}</div></td>
+        <td class="small">${esc(x.role)}</td><td><span class="chip ${st(x.status)}">${x.status}</span></td><td class="num">${x.meetings}</td><td class="num">${x.leads}</td>
+        <td>${x.status === 'Invited' ? `<button class="btn sm" data-act="confirm-part" data-eid="${e.id}" data-id="${s.id}">Mark confirmed</button>` : ''}</td></tr>`; }).join('') || '<tr><td colspan="6" class="muted">No stakeholders yet.</td></tr>'}</tbody></table></div>
+    ${sugg.length ? `<div class="pad" style="border-top:1px solid var(--line);display:grid;gap:8px"><div class="small muted">Suggested for a ${e.theme === 'General' ? 'general trade' : e.theme.toLowerCase()} activity, based on what each stakeholder offers</div>
+      ${sugg.map(s => `<div class="row between wrap"><span><b>${esc(s.name)}</b> <span class="small muted">· ${s.cat} · ${esc(s.offer)}</span></span><button class="btn sm" data-act="invite" data-eid="${e.id}" data-id="${s.id}">Invite</button></div>`).join('')}</div>` : ''}
+  </div>`;
+}
+function eventLeads(e) {
+  const leads = S.partners.filter(p => p.eid === e.id);
+  return `<div class="card" ${spot('eventleads')}><div class="pad row between wrap" style="padding-bottom:6px"><h2>Leads captured here today · ${leads.length}</h2><button class="btn primary sm" data-act="lead-open">+ Capture lead</button></div>
+    <div class="list">${leads.map(p => `<div class="item"><span style="font-size:18px">📱</span><div class="body">${pname(p)}<div class="small muted">${esc(p.poc)} · ${p.type}${p.consent ? ' · marketing consent given' : ''}</div>
+      <div class="row wrap" style="gap:4px;margin-top:4px">${p.interests.map(i => `<span class="chip">${i}</span>`).join('')}${p.referred.map(sid => `<span class="chip accent">→ ${esc(stake(sid).name)}</span>`).join('')}</div></div>
+      <span class="chip ${p.pending ? 'warn' : 'ok'}">${p.pending ? 'Waiting to sync' : 'In pipeline'}</span></div>`).join('') || '<div class="empty">No leads yet. Visitors who stop at the stand can be captured in under a minute.</div>'}</div></div>`;
+}
+function dupHtml(name) {
+  const dup = findDuplicate(name); if (!dup) return '';
+  return `<div class="notice mark" style="display:grid;gap:8px"><span><b>${esc(dup.name)}</b> is already in the CRM (${t(dup.stage)}, ${dup.sec}). Add a note to that record instead of creating a duplicate?</span>
+    <div><button class="btn sm" data-act="lead-note" data-id="${dup.id}">Add note to existing record</button></div></div>`;
+}
+function leadSheet() {
+  const L = S.lead; if (!L) return '';
+  const ev = eventById(L.eid);
+  const sugg = suggestStakeholders(L.interests.length ? L.interests : [], '__none').slice(0, 4);
+  const atEvent = new Set(confirmedAt(L.eid).map(s => s.id));
+  const upcoming = S.events.filter(e => e.status !== 'Completed' && (S.role !== 'layla' || e.sec === 'Europe'));
+  return `<div class="overlay" data-act="lead-close"></div><div class="phone" role="dialog" aria-label="Capture lead">
+    <div class="ph-top"><div class="row between"><span class="small" style="font-weight:600;letter-spacing:.06em">CAPTURE LEAD</span>
+      <button class="btn sm" style="background:rgba(255,255,255,.18);border:0;color:inherit" data-act="online">${S.online ? '● Online' : '○ Offline'}</button></div>
+      <label class="f" style="color:inherit;margin-top:10px">Trade promotion activity<select id="lead-ev" data-lbind="eid" style="color:var(--ink)">${upcoming.map(e => `<option value="${e.id}" ${e.id === L.eid ? 'selected' : ''}>${esc(e.name)}${e.status === 'Live' ? ' (live)' : ''}</option>`).join('')}</select></label></div>
+    <div class="ph-body">
+      <button class="btn" style="padding:12px;border-style:dashed" data-act="scan">📷 Scan business card</button>
+      ${L.scanned ? '<div class="small muted">Card read. Check the fields below. (In this prototype the scan fills a sample card.)</div>' : ''}
+      <label class="f">Company *<input id="lead-name" data-lbind="name" value="${esc(L.name)}" placeholder="e.g. Rheinland Reisen GmbH" autocomplete="off"></label>
+      <div id="lead-dup">${dupHtml(L.name)}</div>
+      <div class="row"><label class="f" style="flex:2">Contact person<input id="lead-poc" data-lbind="poc" value="${esc(L.poc)}"></label><label class="f" style="flex:1">Country<input id="lead-cc" data-lbind="cc" maxlength="2" value="${esc(L.cc)}"></label></div>
+      <label class="f">Email<input id="lead-email" type="email" data-lbind="email" value="${esc(L.email)}"></label>
+      <label class="f">Partner type<select id="lead-type" data-lbind="type">${['Tour operator', 'OTA', 'Luxury agency', 'Airline', 'MICE agency'].map(o => `<option ${L.type === o ? 'selected' : ''}>${o}</option>`).join('')}</select></label>
+      <div><div class="small muted" style="margin-bottom:6px">Interested in</div><div class="toggles">${INTERESTS.map(i => `<button data-act="lead-int" data-v="${i}" class="${L.interests.includes(i) ? 'on' : ''}">${i}</button>`).join('')}</div></div>
+      ${sugg.length ? `<div><div class="small muted" style="margin-bottom:6px">Share this lead with Abu Dhabi stakeholders</div><div style="display:grid;gap:6px">
+        ${sugg.map(s => `<label class="row" style="gap:8px;font-size:13px"><input type="checkbox" style="width:auto" data-act="lead-ref" data-v="${s.id}" ${L.refer.includes(s.id) ? 'checked' : ''}><span><b>${esc(s.name)}</b> <span class="muted">· ${s.cat}${atEvent.has(s.id) ? ' · at this event' : ''}</span></span></label>`).join('')}</div></div>` : ''}
+      <label class="row" style="gap:8px;font-size:13px"><input id="lead-consent" type="checkbox" style="width:auto" data-act="lead-consent" ${L.consent ? 'checked' : ''}><span>Visitor agreed to receive B2B newsletters</span></label>
+      ${L.err ? `<div class="small" style="color:var(--risk)">${L.err}</div>` : ''}
+      <div class="small muted">Saving adds a Prospect to the pipeline linked to ${esc(ev.name)}, schedules an intro call, and notifies the selected stakeholders.${S.online ? '' : ' You are offline, so it is kept on the phone until you reconnect.'}</div>
+      <div class="row"><button class="btn primary" style="flex:1;padding:11px" data-act="lead-save">Save lead</button><button class="btn" style="padding:11px" data-act="lead-close">Cancel</button></div>
+    </div></div>`;
 }
 function captureSheet() {
   const c = S.capture; if (!c) return '';
@@ -513,10 +644,57 @@ function captureSheet() {
       ${atRisk(p) ? `<div class="notice mark">Heads-up: ${p.last} days since anyone in IO spoke to them.</div>` : ''}
       <div><div class="small muted" style="margin-bottom:6px">How did it go?</div><div class="opts">${['Positive', 'Neutral', 'Not interested'].map(o => `<button data-act="outcome" data-v="${o}" class="${c.outcome === o ? 'on' : ''}">${o}</button>`).join('')}</div></div>
       <label class="f">Next action<select id="cap-next" data-bind="next">${['Send proposal', 'Send product deck', 'Invite to FAM trip', 'Schedule a follow-up call', 'No follow-up needed'].map(o => `<option ${c.next === o ? 'selected' : ''}>${o}</option>`).join('')}</select></label>
+      ${confirmedAt(ev.id).length ? `<label class="f">Joint meeting with a stakeholder<select id="cap-joint" data-bind="joint"><option value="">No, IO only</option>${confirmedAt(ev.id).map(s => `<option value="${s.id}" ${c.joint === s.id ? 'selected' : ''}>${esc(s.name)}</option>`).join('')}</select></label>` : ''}
       <label class="f">Notes<textarea id="cap-notes" data-bind="notes" placeholder="Interest, volumes, who else to involve">${esc(c.notes)}</textarea></label>
       <div class="small muted">Saving creates the follow-up task for you, due in 3 days. ${S.online ? '' : 'You are offline: it is stored on the phone and syncs when you reconnect (NFR 8).'}</div>
       <div class="row"><button class="btn primary" style="flex:1;padding:11px" data-act="save-capture" ${c.outcome ? '' : 'disabled'}>Save</button><button class="btn" style="padding:11px" data-act="close-capture">Cancel</button></div>
     </div></div>`;
+}
+
+function stakeStats(sid) {
+  const ps = partsOf(sid), conf = ps.filter(x => x.status === 'Confirmed');
+  const next = ps.map(x => ({ x, e: eventById(x.eid) })).filter(o => o.e.status !== 'Completed' && o.x.status !== 'Declined').sort((a, b) => a.e.start - b.e.start)[0];
+  return { acts: conf.length, meetings: conf.reduce((a, x) => a + x.meetings, 0), leads: conf.reduce((a, x) => a + x.leads, 0), next };
+}
+function screenStakeholders() {
+  const cats = ['All', ...new Set(S.stakeholders.map(s => s.cat))];
+  const list = S.stakeholders.filter(s => S.stakeCat === 'All' || s.cat === S.stakeCat);
+  const tot = S.stakeholders.map(s => stakeStats(s.id));
+  return `<div class="head"><div class="grow"><h1>Stakeholders</h1><div class="muted">Abu Dhabi hotels, attractions, DMCs, airlines and venues that promote the destination with IO</div></div></div>
+    <div class="notice"><span>ℹ</span><span>Destination stakeholders have their own record type, separate from trade partners (FR-C1). Every roadshow, FAM trip and exhibition records who took part and what they got from it, so you can report their return and plan who to invite next.</span></div>
+    <div class="kpis">
+      <div class="kpi card"><span class="small muted">Stakeholders</span><b>${S.stakeholders.length}</b></div>
+      <div class="kpi card"><span class="small muted">Activity participations</span><b>${tot.reduce((a, x) => a + x.acts, 0)}</b></div>
+      <div class="kpi card"><span class="small muted">Trade meetings held</span><b>${tot.reduce((a, x) => a + x.meetings, 0)}</b></div>
+      <div class="kpi card"><span class="small muted">Leads passed to them</span><b>${tot.reduce((a, x) => a + x.leads, 0)}</b></div>
+    </div>
+    <div class="toggles">${cats.map(c => `<button data-act="stake-cat" data-v="${c}" class="${S.stakeCat === c ? 'on' : ''}">${c}</button>`).join('')}</div>
+    <section class="card table-wrap" ${spot('stakelist')}><table>
+      <thead><tr><th>Stakeholder</th><th>Category</th><th>Offering</th><th>Tier</th><th>Activities</th><th>Trade meetings</th><th>Leads shared</th><th>Next activity</th></tr></thead>
+      <tbody>${list.map(s => { const st = stakeStats(s.id); return `<tr class="click" data-act="stake" data-id="${s.id}">
+        <td class="title">${esc(s.name)}</td><td>${s.cat}</td><td class="small muted" style="min-width:200px">${esc(s.offer)}</td><td><span class="chip ${s.tier === 'Strategic' ? 'accent' : ''}">${s.tier}</span></td>
+        <td class="num">${st.acts}</td><td class="num">${st.meetings}</td><td class="num">${st.leads}</td>
+        <td class="small">${st.next ? `${esc(st.next.e.name)}<br><span class="chip ${st.next.x.status === 'Confirmed' ? 'ok' : 'info'}">${st.next.x.status}</span>` : '<span class="muted">None planned</span>'}</td></tr>`; }).join('')}</tbody></table></section>`;
+}
+function stakeDrawer() {
+  const s = stake(S.stakeId); if (!s) return '';
+  const st = stakeStats(s.id);
+  const parts = partsOf(s.id).map(x => ({ x, e: eventById(x.eid) })).sort((a, b) => b.e.start - a.e.start);
+  const leads = S.partners.filter(p => (p.referred || []).includes(s.id));
+  const open = S.events.filter(e => e.status !== 'Completed' && !parts.some(o => o.e.id === e.id));
+  return `<div class="overlay" data-act="stake-close"></div><aside class="drawer" role="dialog" aria-label="${esc(s.name)}">
+    <div class="row between"><span class="eyebrow">Destination stakeholder</span><button class="btn ghost sm" data-act="stake-close">Close</button></div>
+    <div><h1 style="font-size:22px">${esc(s.name)}</h1><div class="muted">${s.cat} · ${esc(s.offer)}</div><div class="small muted">Contact: ${esc(s.poc)} · ${s.tier} stakeholder</div>
+      <div class="row wrap" style="gap:4px;margin-top:6px">${s.interests.map(i => `<span class="chip">${i}</span>`).join('')}</div></div>
+    <div class="facts"><div><span>Activities</span><b>${st.acts}</b></div><div><span>Trade meetings</span><b>${st.meetings}</b></div><div><span>Leads shared</span><b>${st.leads}</b></div><div><span>Next</span><b class="small">${st.next ? esc(st.next.e.name) : '-'}</b></div></div>
+    <div><h2 style="margin-bottom:6px">Trade promotion activities</h2>
+      <div class="list">${parts.map(({ x, e }) => `<div class="item" style="padding-inline:0"><div class="body"><div class="title">${esc(e.name)}</div><div class="small muted">${e.type} · ${esc(e.city)} · ${fDay(e.start)} · ${esc(x.role)}</div></div>
+        <div style="text-align:end"><span class="chip ${x.status === 'Confirmed' ? 'ok' : x.status === 'Invited' ? 'info' : 'risk'}">${x.status}</span><div class="small muted num">${x.meetings} meetings · ${x.leads} leads</div></div></div>`).join('') || '<div class="small muted">Not part of any activity yet.</div>'}</div></div>
+    ${open.length ? `<div class="card pad" style="display:grid;gap:8px;background:var(--sunk);border:0"><h3>Invite to an activity</h3>
+      ${open.map(e => `<div class="row between wrap"><span class="small"><b>${esc(e.name)}</b> · ${fDay(e.start)}</span><button class="btn sm" data-act="invite" data-eid="${e.id}" data-id="${s.id}">Invite</button></div>`).join('')}</div>` : ''}
+    <div><h2 style="margin-bottom:6px">Leads passed to ${esc(s.name)}</h2>${leads.map(p => `<div class="row between small" style="padding:4px 0"><span>${esc(p.name)} <span class="cc">${p.cc}</span></span><span class="muted">${esc(p.source || '')}</span></div>`).join('') || '<div class="small muted">None from this demo yet. Capture a lead with matching interests to share one.</div>'}</div>
+    <div><h2 style="margin-bottom:6px">History</h2><ul class="tl">${s.history.map(h => `<li><span class="muted num">${ago(-h.d)}</span><span class="sec"><span class="chip ${h.sec === 'Europe' ? 'accent' : 'info'}">${h.sec}</span></span><span>${esc(h.text)}</span></li>`).join('') || '<li><span></span><span></span><span class="muted">No activity yet</span></li>'}</ul></div>
+  </aside>`;
 }
 
 function screenCampaigns() {
@@ -568,7 +746,19 @@ function screenReport() {
       <tbody>${rows.map(r => `<tr><td class="title">${r.sec}</td><td class="num">${r.n}</td><td class="num">${r.active}</td>
         <td style="min-width:160px"><div class="bar">${STAGES.map((s, i) => `<i title="${s}" style="width:${r.ps.filter(p => p.stage === s).length / r.n * 100}%;background:${STAGE_COLORS[i]}"></i>`).join('')}</div></td>
         <td>${r.risk ? `<span class="chip risk">${r.risk}</span>` : '<span class="muted">0</span>'}</td><td class="num">${r.ev}</td><td class="num">${r.meet}</td><td class="num">${r.fuRate}%</td></tr>`).join('')}</tbody></table>
-      <div class="pad small muted row wrap" style="gap:12px">${STAGES.map((s, i) => `<span class="row" style="gap:5px"><i style="width:10px;height:10px;border-radius:2px;background:${STAGE_COLORS[i]};display:inline-block"></i>${s}</span>`).join('')}</div></section>`;
+      <div class="pad small muted row wrap" style="gap:12px">${STAGES.map((s, i) => `<span class="row" style="gap:5px"><i style="width:10px;height:10px;border-radius:2px;background:${STAGE_COLORS[i]};display:inline-block"></i>${s}</span>`).join('')}</div></section>
+    ${reportStakeholders(secs)}`;
+}
+function reportStakeholders(secs) {
+  const evIds = new Set(S.events.filter(e => secs.includes(e.sec)).map(e => e.id));
+  const rows = S.stakeholders.map(s => { const ps = S.parts.filter(x => x.sid === s.id && x.status === 'Confirmed' && evIds.has(x.eid));
+    return { s, acts: ps.length, meetings: ps.reduce((a, x) => a + x.meetings, 0), leads: ps.reduce((a, x) => a + x.leads, 0) }; })
+    .filter(r => r.acts).sort((a, b) => b.leads - a.leads || b.meetings - a.meetings);
+  const mobileLeads = S.partners.filter(p => p.source && secs.includes(p.sec)).length;
+  return `<section class="card table-wrap"><div class="pad row between wrap" style="padding-bottom:4px"><h2>Destination stakeholders in trade promotion</h2>
+      <span class="small muted">${mobileLeads} lead(s) captured on mobile this month</span></div><table>
+    <thead><tr><th>Stakeholder</th><th>Category</th><th>Activities</th><th>Trade meetings</th><th>Leads shared</th></tr></thead>
+    <tbody>${rows.map(r => `<tr><td class="title">${esc(r.s.name)}</td><td>${r.s.cat}</td><td class="num">${r.acts}</td><td class="num">${r.meetings}</td><td class="num">${r.leads}</td></tr>`).join('')}</tbody></table></section>`;
 }
 
 /* ============================================================
@@ -599,6 +789,14 @@ const STEPS = [
     pain: 'At roadshows and exhibitions, meeting notes go on paper or in WhatsApp. After the event, nobody can say what it achieved.',
     gain: 'Invitations, attendance, meeting outcomes and follow-ups are tracked for each event. Logging works on a phone, even with no signal at the venue.',
     task: 'Log a meeting at Munich Travel Trade Day. Try it in Offline mode, then sync.' },
+  { key: 'lead', screen: 'events', ev: 'e4', target: 'capturebtn', title: 'Capture leads on a phone', ref: 'FR-A2 · NFR 3 · NFR 8',
+    pain: 'Visitors at the stand hand over business cards that end up in a pocket. They are typed into Excel days later, if at all, and what the visitor was interested in is lost.',
+    gain: 'Scan the card or type four fields. The lead is tied to the activity, checked for duplicates, given an intro call, and shared with Abu Dhabi stakeholders that match its interests. It works offline.',
+    task: 'Press "+ Capture lead" in the top bar, scan the sample card, pick an interest, share it with a stakeholder and save.' },
+  { key: 'stakeholder', screen: 'events', ev: 'e2', target: 'stakeholders', title: 'Stakeholders who promote with us', ref: 'FR-C1 · FR-C4',
+    pain: 'Hotels, attractions, DMCs and airlines that join roadshows and host FAM trips are tracked in emails. Nobody can say which activities they joined or what they got from them.',
+    gain: 'Stakeholders have their own profiles, separate from trade partners. Each trade promotion activity records who took part, their role, the meetings they held and the leads passed to them.',
+    task: 'On the Winter FAM trip, confirm Corniche Grand Hotel or invite a suggested stakeholder. Then open Stakeholders in the menu.' },
   { key: 'segment', screen: 'campaigns', target: 'segment', title: 'Campaigns aimed at the right partners', ref: 'FR-B1 to B3',
     pain: 'B2B emails go out to Outlook distribution lists, with no segments and no idea who engaged.',
     gain: 'Audiences come straight from partner data (market, type, tier), and engagement plus co-marketing results are visible.',
@@ -616,6 +814,8 @@ const PROOF = [
   ['stage', 'Pipeline stages visible to the whole section'],
   ['followup', 'Follow-ups created and tracked automatically'],
   ['capture', 'An event cycle run end to end: invitation → attendance → meeting log → follow-up'],
+  ['lead', 'Leads captured on mobile at the activity, offline, de-duplicated and routed'],
+  ['stakeholder', 'Destination stakeholders tracked across trade promotion activities, with their return'],
   ['segment', 'Segmented, trackable B2B campaigns'],
   ['report', 'Monthly HQ report with zero manual Excel or PowerPoint work'],
 ];
@@ -643,8 +843,8 @@ function tour() {
 /* ============================================================
    Shell + render
    ============================================================ */
-const NAV = [['today', 'Today'], ['partners', 'Partners'], ['pipeline', 'Pipeline'], ['events', 'Events'], ['campaigns', 'Campaigns'], ['report', 'HQ report']];
-const SCREENS = { today: screenToday, partners: screenPartners, pipeline: screenPipeline, events: screenEvents, campaigns: screenCampaigns, report: screenReport };
+const NAV = [['today', 'Today'], ['partners', 'Partners'], ['stakeholders', 'Stakeholders'], ['pipeline', 'Pipeline'], ['events', 'Events'], ['campaigns', 'Campaigns'], ['report', 'HQ report']];
+const SCREENS = { today: screenToday, partners: screenPartners, stakeholders: screenStakeholders, pipeline: screenPipeline, events: screenEvents, campaigns: screenCampaigns, report: screenReport };
 
 function render() {
   document.documentElement.lang = S.lang; document.documentElement.dir = S.lang === 'ar' ? 'rtl' : 'ltr';
@@ -656,6 +856,7 @@ function render() {
       <div class="foot">Prototype · sample data<br>Nothing is saved</div></nav>
     <main><div class="topbar">
         <span class="chip mark">Sample data</span><span class="grow"></span>
+        <button class="btn primary" data-act="lead-open" ${spot('capturebtn')}>+ Capture lead</button>
         <label class="viewas small" ${spot('rolesel')}><span class="muted">${t('Viewing as')}</span>
           <select id="role" data-act-change="role"><option value="layla" ${S.role === 'layla' ? 'selected' : ''}>Layla Al Mazrouei · Europe section lead</option><option value="lead" ${S.role === 'lead' ? 'selected' : ''}>IO Leadership · all sections</option></select></label>
         <div class="seg" role="group" aria-label="Language"><button data-act="lang" data-v="en" class="${S.lang === 'en' ? 'on' : ''}">EN</button><button data-act="lang" data-v="ar" class="${S.lang === 'ar' ? 'on' : ''}">عربي</button></div>
@@ -664,7 +865,7 @@ function render() {
     ${S.tourOpen ? tour() : ''}
   </div>
   ${S.tourOpen ? '' : `<button class="btn primary tour-fab" data-act="tour-open">${t('Guided tour')} · ${S.step + 1}/${STEPS.length}</button>`}
-  ${profileDrawer()}${captureSheet()}
+  ${profileDrawer()}${stakeDrawer()}${captureSheet()}${leadSheet()}
   ${S.toast ? `<div class="toast" role="status">${esc(S.toast)}</div>` : ''}`;
   const m2 = document.querySelector('main'); if (m2) m2.scrollTop = y;
   if (S.spot) { const el = document.querySelector(`[data-spot="${S.spot}"]`); if (el) { el.classList.add('spot'); el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } }
@@ -679,6 +880,8 @@ function advanceIfDone(key) {
 }
 const toastFor = k => ({ merge: '3 records merged into one.', history: 'Full cross-section history shown.', stage: 'Pipeline updated for the whole section.',
   followup: 'Follow-up logged against the partner.', capture: S.online ? 'Meeting saved. Follow-up created automatically.' : 'Saved on the phone. It will sync when you reconnect.',
+  lead: S.online ? 'Lead saved to the pipeline. Intro call scheduled and stakeholders notified.' : 'Lead saved on the phone. It will sync when you reconnect.',
+  stakeholder: 'Stakeholder participation updated for this activity.',
   segment: 'Segment saved for the next newsletter.', report: 'Now showing every section.' }[k]);
 
 document.addEventListener('click', e => {
@@ -703,6 +906,26 @@ document.addEventListener('click', e => {
     case 'sync': S.tasks.forEach(x => x.pending = false); toast('Synced. Everyone in the section can see it now.'); break;
     case 'seg': { const arr = S.seg[el.dataset.k]; const i = arr.indexOf(v); i < 0 ? arr.push(v) : arr.splice(i, 1); S.segSaved = false; break; }
     case 'save-seg': S.segSaved = true; S.done.segment = true; break;
+    case 'stake': S.stakeId = id; break;
+    case 'stake-close': S.stakeId = null; break;
+    case 'stake-cat': S.stakeCat = v; break;
+    case 'invite': inviteStakeholder(el.dataset.eid, id); break;
+    case 'confirm-part': confirmPart(el.dataset.eid, id); break;
+    case 'lead-open': {
+      const live = S.events.find(x => x.status === 'Live');
+      S.lead = { eid: live ? live.id : 'e2', name: '', poc: '', cc: '', email: '', type: 'Tour operator', interests: [], refer: [], consent: false, scanned: false, err: null };
+      S.profileId = null; S.stakeId = null; break;
+    }
+    case 'lead-close': S.lead = null; break;
+    case 'scan': Object.assign(S.lead, SAMPLE_CARD, { scanned: true, err: null }); break;
+    case 'lead-int': { const a2 = S.lead.interests, i = a2.indexOf(v); i < 0 ? a2.push(v) : a2.splice(i, 1); break; }
+    case 'lead-ref': { const a2 = S.lead.refer, i = a2.indexOf(v); i < 0 ? a2.push(v) : a2.splice(i, 1); break; }
+    case 'lead-consent': S.lead.consent = !S.lead.consent; break;
+    case 'lead-note': touch(id, `Note added on mobile at ${eventById(S.lead.eid).name}`); toast(`Note added to ${partner(id).name}. No duplicate created.`); S.lead = null; break;
+    case 'lead-save':
+      if (!S.lead.name.trim()) { S.lead.err = 'Add the company name, or scan a card.'; break; }
+      if (findDuplicate(S.lead.name)) { S.lead.err = 'This company already exists. Add a note to the existing record instead.'; break; }
+      saveLead(S.lead); S.lead = null; break;
     case 'tour-close': S.tourOpen = false; break;
     case 'tour-open': S.tourOpen = true; break;
     case 'step': S.step = +v; break;
@@ -718,22 +941,31 @@ document.addEventListener('click', e => {
 });
 function goStep(force) {
   const s = STEPS[S.step]; if (!s.screen) return;
-  if (force || S.screen !== s.screen) { S.screen = s.screen; S.profileId = null; S.capture = null; }
+  if (force || S.screen !== s.screen) { S.screen = s.screen; S.profileId = null; S.capture = null; S.stakeId = null; S.lead = null; }
+  if (s.ev) S.eventId = s.ev;
   if (s.key === 'report' && S.role === 'layla') spotlight('rolesel'); else spotlight(s.target);
   if (window.matchMedia('(max-width:1100px)').matches && force) S.tourOpen = false;
 }
 document.addEventListener('change', e => {
   if (e.target.id === 'role') { S.role = e.target.value; if (S.role === 'lead' && !S.done.report) { S.done.report = true; S.screen = 'report'; advanceIfDone('report'); } render(); }
   if (e.target.dataset.bind && S.capture) S.capture[e.target.dataset.bind] = e.target.value;
+  // Lead fields: re-render when a field is left, so the duplicate check and activity choice update.
+  if (e.target.dataset.lbind === 'eid' && S.lead) { S.lead.eid = e.target.value; render(); }
 });
-document.addEventListener('input', e => { if (e.target.dataset.bind && S.capture) S.capture[e.target.dataset.bind] = e.target.value; });
+document.addEventListener('input', e => {
+  if (e.target.dataset.bind && S.capture) S.capture[e.target.dataset.bind] = e.target.value;
+  if (e.target.dataset.lbind && S.lead) {
+    S.lead[e.target.dataset.lbind] = e.target.value;
+    if (e.target.dataset.lbind === 'name') { const box = document.getElementById('lead-dup'); if (box) box.innerHTML = dupHtml(e.target.value); }
+  }
+});
 document.addEventListener('submit', e => {
   const f = e.target.closest('form[data-form="lead"]'); if (!f) return; e.preventDefault();
   const d = Object.fromEntries(new FormData(f)); const was = S.done.stage; addLead(d); S.quickLead = false;
   toast(`${d.name} added as a Prospect. An intro call was scheduled automatically.`); if (!was) setTimeout(() => toast('Pipeline updated. Press Next in the tour to continue.'), 2700);
   render();
 });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && (S.profileId || S.capture)) { S.profileId = null; S.capture = null; render(); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && (S.profileId || S.capture || S.stakeId || S.lead)) { S.profileId = null; S.capture = null; S.stakeId = null; S.lead = null; render(); } });
 if (window.matchMedia('(max-width:1100px)').matches) S.tourOpen = true;
 render();
 </script>
