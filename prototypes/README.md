@@ -25,16 +25,19 @@ Once a variant wins, write down the verdict, rebuild it properly in D365 / Power
 
 **Question:** does a working IO CRM show the value of the BRD (DCT-IO-CRM-BRD v1.0) to the people who will use it?
 
-The scope is the BRD only. The IO operating summary was used for context (sections, units, partner and event types).
+The scope is the BRD only. The IO operating summary was used for context.
 
-- **Market 360:** a consolidated picture of All IO, a section or a country. It shows guest performance against target (actuals joined from the JMP Tracker and partner reports via the FR-D1 data model), a tile map to drill down, generated "what needs attention" insights, and a partner table that puts performance, contact, follow-ups, events and co-marketing on one row, plus pipeline, trade promotion, campaigns and engagement across IO.
-- **Basics:** sign-in (DCT single sign-on, simulated) with four role-scoped personas (Section Lead Europe, Unit Head DACH, PR & Marketing Officer, IO Leadership & PMO); search; notifications; activity logging and record history; EN / عربي switch
-- **Workstream A:** partner master with de-duplication (FR-A1); mobile lead capture and the Prospect → Active pipeline with a conversion trend (FR-A2); cadence rules creating and escalating follow-ups (FR-A3); partner and pipeline dashboards plus a personal view (FR-A4)
-- **Workstream B:** segments synced to the existing newsletter tool (FR-B1); co-marketing per partnership (FR-B2); performance (FR-B3)
-- **Workstream C:** destination stakeholders and events (FR-C1); invitations and mobile meeting logging that works offline (FR-C2); automatic post-event follow-up (FR-C3); cross-IO timeline and event return (FR-C4)
-- **Workstream D:** row-level access (FR-D1); leadership view and an auto-generated monthly HQ pack (FR-D2)
-- **BRD coverage page:** each requirement mapped to where it appears, plus the out-of-scope items and the open-item assumptions
+Navigation is grouped by the work people do:
 
-A 13-step guided tour ends on the BRD §2.3 success criteria. All data is fictional.
+- **Overview:** Home (my day) and Market 360, a consolidated picture of All IO, a section or a country: performance against target joined with partners, pipeline, events, campaigns and engagement
+- **Relationships:** Partners (FR-A1), Stakeholders (FR-C1), Pipeline (FR-A2) and Activities (FR-A3, FR-C3)
+- **Promotion:** Trade promotion (FR-C1 to C4) and Campaigns (FR-B1 to B3)
+- **Insights:** Reports (FR-A4, FR-C4, FR-D2) and BRD coverage
+
+Partners, stakeholders and events open as full detail pages with tabs. For example, an event has Overview, Invitations, Stakeholders, Meetings & leads and Results.
+
+The basics are covered: sign-in with four role-scoped personas (FR-D1, NFR 10), search, notifications, activity logging, record history, an EN / عربي switch, and mobile capture forms that work offline.
+
+The guided tour has 9 steps and sits in a pinned bar under the top bar, so Back and Next are always visible. The app is locked to the viewport and only the content area scrolls. All data is fictional.
 
 **Run:** open the file in a browser, or use the published Artifact link.
