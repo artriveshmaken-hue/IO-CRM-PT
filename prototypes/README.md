@@ -23,8 +23,22 @@ Once a variant wins, write down the verdict, rebuild it properly in D365 / Power
 
 ## `value-demo/io-crm-value-demo.prototype.html`: IO CRM value demo
 
-**Question:** does a working IO CRM show the people who will use it the value the BRD promises?
+**Question:** can one IO CRM (Dynamics 365) replace the toolset IO runs on today, so nobody needs a separate tracker, app or dashboard?
 
-This is a clickable demo of one working day for a Europe section lead, with a guided tour of 11 steps. Each step pairs a problem from the BRD's current-state analysis (Excel per section, WhatsApp, Outlook lists, manual HQ packs) with the CRM feature that solves it, then asks the viewer to try that feature: merge duplicates, read the history across sections, move the pipeline, complete an automatic follow-up, log an event meeting offline, capture a lead on a phone (card scan, duplicate check, consent, offline queue, sharing with stakeholders), track Abu Dhabi destination stakeholders across trade promotion activities (FR-C1), build a campaign segment, and switch to the leadership view of the HQ report. The final step checks the results against BRD §2.3 success criteria.
+The demo opens on a sign-in screen (DCT single sign-on, simulated) with five personas, each with its own data scope: Director, Section Head Europe, Unit Head DACH/BeNe, Country Manager Germany (GSA, market-level only, no budgets) and PMO. It covers IO's full operating cycle:
+
+- **Home:** a cockpit for each role, an approvals inbox (replaces circulation slips), today's work and notifications
+- **Accounts:** one record per partner, global partner, stakeholder and office, with contacts, selection score (<50 / 50–74 / 75+), activity logging and change history
+- **Tactical Plan:** an ATP 2027 submission checked against PMO rules, plus the 2026 plan with Tactical IDs, cashflow and change log
+- **Tactical Monitor:** plan vs actual vs ROY by section and activity
+- **JMP & Contracts:** portfolio, signing pipeline, monthly actuals, payments and post-completion reports, sample-based validation, approval routes generated from DoA and policy thresholds, and termination triggers
+- **Trade promotion:** events tied to Tactical IDs, stakeholders, meetings and mobile lead capture (offline)
+- **Budget & PR/PO:** SLA ageing and the seven-section leadership report
+- **Dashboards:** the YTD dashboard with a switch between contracted and ST targets
+- **Market readiness**
+- **Reports:** the Director update (Progress / Flagged / Leave) and management-reporting requests
+- **Audit log** and **What it replaces**
+
+A 14-step guided tour retires one tool at a time. All data is fictional and generated from a fixed seed.
 
 **Run:** open the file in a browser, or use the published Artifact link.
