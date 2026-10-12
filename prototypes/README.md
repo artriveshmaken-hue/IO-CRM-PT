@@ -23,22 +23,17 @@ Once a variant wins, write down the verdict, rebuild it properly in D365 / Power
 
 ## `value-demo/io-crm-value-demo.prototype.html`: IO CRM value demo
 
-**Question:** can one IO CRM (Dynamics 365) replace the toolset IO runs on today, so nobody needs a separate tracker, app or dashboard?
+**Question:** does a working IO CRM show the value of the BRD (DCT-IO-CRM-BRD v1.0) to the people who will use it?
 
-The demo opens on a sign-in screen (DCT single sign-on, simulated) with five personas, each with its own data scope: Director, Section Head Europe, Unit Head DACH/BeNe, Country Manager Germany (GSA, market-level only, no budgets) and PMO. It covers IO's full operating cycle:
+The scope is the BRD only. The IO operating summary was used for context (sections, units, partner and event types).
 
-- **Home:** a cockpit for each role, an approvals inbox (replaces circulation slips), today's work and notifications
-- **Accounts:** one record per partner, global partner, stakeholder and office, with contacts, selection score (<50 / 50–74 / 75+), activity logging and change history
-- **Tactical Plan:** an ATP 2027 submission checked against PMO rules, plus the 2026 plan with Tactical IDs, cashflow and change log
-- **Tactical Monitor:** plan vs actual vs ROY by section and activity
-- **JMP & Contracts:** portfolio, signing pipeline, monthly actuals, payments and post-completion reports, sample-based validation, approval routes generated from DoA and policy thresholds, and termination triggers
-- **Trade promotion:** events tied to Tactical IDs, stakeholders, meetings and mobile lead capture (offline)
-- **Budget & PR/PO:** SLA ageing and the seven-section leadership report
-- **Dashboards:** the YTD dashboard with a switch between contracted and ST targets
-- **Market readiness**
-- **Reports:** the Director update (Progress / Flagged / Leave) and management-reporting requests
-- **Audit log** and **What it replaces**
+- **Basics:** sign-in (DCT single sign-on, simulated) with four role-scoped personas (Section Lead Europe, Unit Head DACH, PR & Marketing Officer, IO Leadership & PMO); search; notifications; activity logging and record history; EN / عربي switch
+- **Workstream A:** partner master with de-duplication (FR-A1); mobile lead capture and the Prospect → Active pipeline with a conversion trend (FR-A2); cadence rules creating and escalating follow-ups (FR-A3); partner and pipeline dashboards plus a personal view (FR-A4)
+- **Workstream B:** segments synced to the existing newsletter tool (FR-B1); co-marketing per partnership (FR-B2); performance (FR-B3)
+- **Workstream C:** destination stakeholders and events (FR-C1); invitations and mobile meeting logging that works offline (FR-C2); automatic post-event follow-up (FR-C3); cross-IO timeline and event return (FR-C4)
+- **Workstream D:** row-level access (FR-D1); leadership view and an auto-generated monthly HQ pack (FR-D2)
+- **BRD coverage page:** each requirement mapped to where it appears, plus the out-of-scope items and the open-item assumptions
 
-A 14-step guided tour retires one tool at a time. All data is fictional and generated from a fixed seed.
+A 12-step guided tour ends on the BRD §2.3 success criteria. All data is fictional.
 
 **Run:** open the file in a browser, or use the published Artifact link.
